@@ -1,0 +1,33 @@
+# use : mamba env create -f requirements.yml
+name: root_bridges
+channels:
+  - conda-forge
+  - openalea3
+dependencies:
+  - python=3.9.18
+  # OpenAlea dependancies
+  - openalea.plantgl
+  - openalea.mtg
+  - openalea.deploy
+  - openalea.lpy
+  - alinea.caribu
+  - alinea.astk
+  # data_utility dependancies
+  - xarray=2023.3.0
+  - netcdf4=1.6.3
+  - dask=2023.3.2
+  - charset-normalizer=3.1.0
+  - bottleneck=1.3.7
+  - pandas=1.5.3
+  - numpy=1.22.4
+  - matplotlib=3.7.0
+  - scikit-learn=1.2.2
+  - umap-learn=0.5.3
+  - hdbscan=0.8.29
+  - imageio=2.34.0
+  - imageio-ffmpeg=0.4.9
+  - pyvista=0.43.4
+  - openpyxl=3.0.10
+  - cudatoolkit
+  - tensorflow
+  - statsmodels=0.14.1
