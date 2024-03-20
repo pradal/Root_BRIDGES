@@ -31,20 +31,20 @@ from setuptools import setup
 """
 
 if sys.version_info < (3, 9):
-    print('ERROR: CN-Wheat requires at least Python 3.9 to run.')
+    print('ERROR: Root_BRIDGES requires at least Python 3.9 to run.')
     sys.exit(1)
 
 setup(
-    name="Root-FSPM",
+    name="Root_BRIDGES",
     version="0.1.0",
-    packages=["root_bridges"],
+    packages=["root_bridges", "simulations", "test"],
     include_package_data=True,
     author="T.Grault, F.Rees, R.Barillot and C.Pradal",
     author_email="tristan.gerault@inrae.fr, frederic.rees@inrae.fr, romain.barillot@inrae.fr, christophe.pradal@cirad.fr",
-    description="Root-CyNAPS is a model of N physiology at root segment scale",
+    description="Root_BRIDGES is a model of root CNW physiology at root segment scale",
     long_description="""TODO""",
     license="CeCILL-C",
     keywords="functional-structural plant model, wheat, uptake, rhizodeposition, trophic status, carbon, nitrogen, metabolism, remobilisation, source-sink relation, resource allocation",
-    url="https://forgemia.inra.fr/tristan.gerault/root_cynaps.git",
-    download_url="https://forgemia.inra.fr/tristan.gerault/root_cynaps.git"
+    url="https://github.com/GeraultTr/Root_BRIDGES",
+    download_url="https://github.com/GeraultTr/Root_BRIDGES.git"
 )

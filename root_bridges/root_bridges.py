@@ -1,22 +1,26 @@
 import os
 import pickle
 
-from root_bridges.coupled_models import (
-    # MODELS
-    RootNitrogenModelCoupled,
-    RootCarbonModelCoupled,
-    RootWaterModelCoupled,
-    RootGrowthModelCoupled,
-    RootAnatomyCoupled,
-)
+import root_bridges
 
+# Edited models
+from root_bridges.root_carbon import RootCarbonModelCoupled
+from root_bridges.root_nitrogen import RootNitrogenModelCoupled
+
+# Untouched models
+from rhizodep.root_growth import RootGrowthModel
+from rhizodep.root_anatomy import RootAnatomy
 from rhizodep.rhizo_soil import SoilModel
+
+from root_cynaps.root_water import RootWaterModel
+
 from Data_enforcer.shoot import ShootModel
 
-from root_cynaps.wrapper import ModelWrapper
+# Utilities
+from genericmodel.composite_wrapper import CompositeModel
 
 
-class Model(ModelWrapper):
+class Model(CompositeModel):
     """
     Root-BRIDGES model
 
@@ -41,56 +45,50 @@ class Model(ModelWrapper):
         """
 
         # INIT INDIVIDUAL MODULES
-        self.root_growth = RootGrowthModelCoupled(time_step, **scenario)
+        self.root_growth = RootGrowthModel(time_step, **scenario)
         self.g = self.root_growth.g
-        self.root_anatomy = RootAnatomyCoupled(self.g, time_step, **scenario)
+        self.root_anatomy = RootAnatomy(self.g, time_step, **scenario)
+        self.root_water = RootWaterModel(self.g, time_step)
         self.root_carbon = RootCarbonModelCoupled(self.g, time_step, **scenario)
-        self.root_water = RootWaterModelCoupled(self.g, time_step)
-        self.root_nitrogen = RootNitrogenModelCoupled(self.g, time_step)
+        self.root_nitrogen = RootNitrogenModelCoupled(self.g, time_step, **scenario)
         self.soil = SoilModel(self.g, time_step, **scenario)
 
         # Initialisation of Shoot modules
         self.shoot = ShootModel(self.g)
 
-        self.models = (self.root_growth, self.root_anatomy, self.root_carbon, self.root_water, self.root_nitrogen, self.soil)
+        self.models = (self.root_growth, self.root_anatomy, self.root_water, self.root_carbon, self.root_nitrogen, self.soil)
 
         # LINKING MODULES
-        # Get or build translator matrix
-        if not os.path.isfile("translator.pckl"):
-            print("NOTE : You will now have to provide information about shared variables between the modules composing this model :\n")
-            self.translator_matrix_builder()
-        with open("translator.pckl", "rb") as f:
-            translator = pickle.load(f)
-
-        # Actually link modules together
-        self.link_around_mtg(translator)
+        self.link_around_mtg(translator_path=root_bridges.__path__[0])
 
         # Some initialization must be performed AFTER linking modules
-        self.soil.post_coupling_init()
-        self.root_water.post_coupling_init()
-        self.root_carbon.post_coupling_init()
-        self.root_nitrogen.post_coupling_init()
-        self.root_growth.post_coupling_init()
-        self.root_anatomy.post_coupling_init()
-
-        # Step number to read datatable for data enforcing
-        self.step = 1
+        [m.post_coupling_init() for m in self.models]
 
     def run(self):
         # Update environment boundary conditions
-        self.soil.run_exchanges_and_balance()
+        self.soil()
 
         # Compute shoot flows and state balance
-        self.shoot.run_exchanges_and_balance(time=self.step)
-
-        # Compute state variations for water and then carbon and nitrogen
-        self.root_water.run_exchanges_and_balance()
-        self.root_carbon.run_exchanges_and_balance()
-        self.root_nitrogen.run_exchanges_and_balance()
+        self.shoot()
 
         # Compute root growth from resulting states
-        self.root_growth.run_time_step_growth()
-        # Update topological surfaces and volumes based on other evolved structural properties
-        self.root_anatomy.run_actualize_anatomy()
+        self.root_growth()
+        
+        # TODO
+        self.root_anatomy.post_growth_updating()
+        self.root_water.post_growth_updating()
+        self.root_carbon.post_growth_updating()
+        self.root_nitrogen.post_growth_updating()
+        self.soil.post_growth_updating()
 
-        self.step += 1
+        # Update topological surfaces and volumes based on other evolved structural properties
+        self.root_anatomy()
+
+        # Compute state variations for water and then carbon and nitrogen
+        self.root_water()
+        self.root_carbon()
+        self.root_nitrogen()
+        #self.root_nitrogen(specific_process=["rate", "stepinit"])
+        #self.root_carbon(specifi_process=["rate"])
+        #self.root_nitrogen(excluded_process=["rate", "stepinit"])
+        #self.root_carbon(excluded_process=["rate"])
