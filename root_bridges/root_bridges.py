@@ -56,7 +56,8 @@ class Model(CompositeModel):
         # Initialisation of Shoot modules
         self.shoot = ShootModel(self.g)
 
-        self.models = (self.root_growth, self.root_anatomy, self.root_water, self.root_carbon, self.root_nitrogen, self.soil)
+        # EXPECTED !
+        self.models = (self.root_growth, self.root_anatomy, self.root_water, self.root_carbon, self.root_nitrogen, self.soil, self.shoot)
 
         # LINKING MODULES
         self.link_around_mtg(translator_path=root_bridges.__path__[0])

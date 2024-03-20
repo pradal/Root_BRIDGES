@@ -16,6 +16,7 @@ RootAnatomy:
       total_root_hairs_number: 1.0
   RootNitrogenModelCoupled: {}
   RootWaterModel: {}
+  ShootModel: {}
   SoilModel: {}
 RootCarbonModelCoupled:
   RootAnatomy:
@@ -45,6 +46,9 @@ RootCarbonModelCoupled:
       type: 1.0
   RootNitrogenModelCoupled: {}
   RootWaterModel: {}
+  ShootModel:
+    sucrose_input_rate:
+      Unloading_Sucrose: 1.0
   SoilModel:
     C_hexose_soil:
       C_hexose_soil: 1.0
@@ -62,6 +66,7 @@ RootGrowthModel:
   RootGrowthModel: {}
   RootNitrogenModelCoupled: {}
   RootWaterModel: {}
+  ShootModel: {}
   SoilModel:
     soil_temperature_in_Celsius:
       soil_temperature_in_Celsius: 1.0
@@ -103,6 +108,11 @@ RootNitrogenModelCoupled:
       axial_import_water_down: 1.0
     xylem_water:
       xylem_water: 1.0
+  ShootModel:
+    AA_root_shoot_phloem:
+      Unloading_Amino_Acids: 1.0
+    cytokinins_root_shoot_xylem:
+      Export_cytokinins: 1.0
   SoilModel:
     soil_AA:
       C_AA_soil: 1.0
@@ -126,15 +136,24 @@ RootWaterModel:
       struct_mass: 1.0
   RootNitrogenModelCoupled: {}
   RootWaterModel: {}
+  ShootModel:
+    water_root_shoot_xylem:
+      Total_Transpiration: 1.0
   SoilModel:
     soil_temperature:
-      soil_temperature: 1.0
+      soil_temperature_in_Celsius: 1.0
     soil_water_pressure:
       water_potential_soil: 1.0
+ShootModel:
+  RootAnatomy: {}
+  RootCarbonModelCoupled: {}
+  RootGrowthModel: {}
+  RootNitrogenModelCoupled: {}
+  RootWaterModel: {}
+  ShootModel: {}
+  SoilModel: {}
 SoilModel:
-  RootAnatomy:
-    root_exchange_surface:
-      root_exchange_surface: 1.0
+  RootAnatomy: {}
   RootCarbonModelCoupled:
     cells_release:
       cells_release: 1.0
@@ -153,4 +172,7 @@ SoilModel:
       struct_mass: 1.0
   RootNitrogenModelCoupled: {}
   RootWaterModel: {}
-  SoilModel: {}
+  ShootModel: {}
+  SoilModel:
+    root_exchange_surface:
+      root_exchange_surface: 1.0
