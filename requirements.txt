@@ -12,7 +12,7 @@ git clone git@forgemia.inra.fr:rhizodep/rhizodep.git
 git clone --recurse-submodules https://github.com/GeraultTr/WheatFspm.git
 
 # Openalea dependancies
-mamba install -y -c openalea3 -c conda-forge openalea.plantgl openalea.mtg openalea.deploy
+mamba install -y -c openalea3 -c conda-forge openalea.plantgl openalea.mtg openalea.deploy openalea.lpy alinea.caribu alinea.astk
 
 # Data_Utility dependancies 
 mamba install -y -c conda-forge xarray==2023.3.0 dask==2023.3.2 bottleneck==1.3.7
