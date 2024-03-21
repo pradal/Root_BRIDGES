@@ -6,7 +6,12 @@ Prerequisites to installation :
 - miniconda (https://docs.anaconda.com/free/miniconda/miniconda-install/) 
 - git (https://git-scm.com/downloads)
 
-First, in a terminal, clone this repository and its unpackaged dependancies in the desired location :
+In a terminal, optionally install mamba for faster installation
+```
+conda install -y -c conda-forge mamba
+```
+
+Then, clone this repository and its unpackages dependancies in the desired location :
 ```
 git clone https://github.com/GeraultTr/Root_BRIDGES.git
 git clone https://github.com/GeraultTr/genericmodel.git
@@ -18,7 +23,7 @@ cd root_bridges
 
 Then, install packaged dependancies with : 
 ```
-conda env create -f requirements.yml
+mamba env create -f requirements.yml
 conda activate root_bridges
 ```
 

@@ -1,0 +1,28 @@
+# use : mamba create -n root_bridges -c conda-forge -c openalea3 --strict-channel-priority --file requirements.txt
+python
+# OpenAlea dependancies
+openalea.plantgl
+openalea.mtg
+openalea.deploy
+openalea.lpy
+alinea.caribu
+alinea.astk
+# data_utility dependancies
+xarray
+netcdf4
+dask
+charset-normalizer
+bottleneck
+pandas
+numpy
+matplotlib
+scikit-learn
+umap-learn
+hdbscan
+imageio
+imageio-ffmpeg
+pyvista
+openpyxl
+cudatoolkit
+tensorflow
+statsmodels
