@@ -17,7 +17,7 @@ from root_cynaps.root_water import RootWaterModel
 from Data_enforcer.shoot import ShootModel
 
 # Utilities
-from genericmodel.composite_wrapper import CompositeModel
+from metafspm.composite_wrapper import CompositeModel
 
 
 class Model(CompositeModel):

@@ -1,8 +1,8 @@
 import os
 from root_bridges.root_bridges import Model
-from data_utility.logging import Logger
-from data_utility.data_analysis import analyze_data
-from data_utility.preprocess_scenario import MakeScenarios as ms
+from log.logging import Logger
+from analyze.analyze import analyze_data
+from initialize.initialize import MakeScenarios as ms
 
 def single_run(scenario, outputs_dirpath="test/outputs"):
     root_bridges = Model(time_step=3600, **scenario)
