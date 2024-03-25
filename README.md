@@ -23,8 +23,8 @@ cd root_bridges
 
 Then, install packaged dependancies with : 
 ```
-mamba env create -f requirements.yml
-conda activate root_bridges
+mamba create -n root_bridges -c conda-forge -c openalea3 --strict-channel-priority --file requirements.txt
+mamba activate root_bridges
 ```
 
 Finally, setup the locally unpackaged dependancies : 

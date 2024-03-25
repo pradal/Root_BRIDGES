@@ -4,10 +4,8 @@ python
 openalea.plantgl
 openalea.mtg
 openalea.deploy
-openalea.lpy
-alinea.caribu
-alinea.astk
-# data_utility dependancies
+
+# packaged dependancies
 xarray
 netcdf4
 dask
