@@ -14,11 +14,11 @@ from rhizodep.rhizo_soil import SoilModel
 
 from root_cynaps.root_water import RootWaterModel
 
-from Data_enforcer.shoot import ShootModel
-from fspmwheat.simulation import WheatFspm, scenario_utility
+# from Data_enforcer.shoot import ShootModel
+from fspmwheat.simulation import WheatFSPM, scenario_utility
 
 # Utilities
-from genericmodel.composite_wrapper import CompositeModel
+from metafspm.composite_wrapper import CompositeModel
 
 
 class Model(CompositeModel):
@@ -49,13 +49,11 @@ class Model(CompositeModel):
         self.root_growth = RootGrowthModel(time_step, **scenario)
         self.g = self.root_growth.g
         self.root_anatomy = RootAnatomy(self.g, time_step, **scenario)
-        self.root_water = RootWaterModel(self.g, time_step)
+        self.root_water = RootWaterModel(self.g, time_step, **scenario)
         self.root_carbon = RootCarbonModelCoupled(self.g, time_step, **scenario)
         self.root_nitrogen = RootNitrogenModelCoupled(self.g, time_step, **scenario)
         self.soil = SoilModel(self.g, time_step, **scenario)
-
-        # Initialisation of Shoot modules
-        self.shoot = ShootModel(self.g)
+        self.shoot = WheatFSPM(**scenario_utility(INPUTS_DIRPATH="test/inputs"))
 
         # EXPECTED !
         self.models = (self.root_growth, self.root_anatomy, self.root_water, self.root_carbon, self.root_nitrogen, self.soil, self.shoot)
@@ -76,7 +74,7 @@ class Model(CompositeModel):
         # Compute root growth from resulting states
         self.root_growth()
         
-        # TODO
+        # Extend property dictionnaries after growth
         self.root_anatomy.post_growth_updating()
         self.root_water.post_growth_updating()
         self.root_carbon.post_growth_updating()
@@ -90,6 +88,8 @@ class Model(CompositeModel):
         self.root_water()
         self.root_carbon()
         self.root_nitrogen()
+
+        # TODO, introduce possibility of no priority between carbon and nitrogen resolution
         #self.root_nitrogen(specific_process=["rate", "stepinit"])
         #self.root_carbon(specifi_process=["rate"])
         #self.root_nitrogen(excluded_process=["rate", "stepinit"])

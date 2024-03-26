@@ -48,7 +48,7 @@ class Model(CompositeModel):
         self.root_growth = RootGrowthModel(time_step, **scenario)
         self.g = self.root_growth.g
         self.root_anatomy = RootAnatomy(self.g, time_step, **scenario)
-        self.root_water = RootWaterModel(self.g, time_step)
+        self.root_water = RootWaterModel(self.g, time_step, **scenario)
         self.root_carbon = RootCarbonModelCoupled(self.g, time_step, **scenario)
         self.root_nitrogen = RootNitrogenModelCoupled(self.g, time_step, **scenario)
         self.soil = SoilModel(self.g, time_step, **scenario)

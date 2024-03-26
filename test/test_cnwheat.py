@@ -1,16 +1,16 @@
 import os
-from root_bridges.root_bridges import Model
+from root_bridges.whole_plant import Model
 from log.logging import Logger
 from analyze.analyze import analyze_data
 from initialize.initialize import MakeScenarios as ms
 
 def single_run(scenario, outputs_dirpath="test/outputs"):
-    root_bridges = Model(time_step=3600, **scenario)
+    whole_plant = Model(time_step=3600, **scenario)
     
-    logger = Logger(model_instance=root_bridges, outputs_dirpath=outputs_dirpath, 
+    logger = Logger(model_instance=whole_plant, outputs_dirpath=outputs_dirpath, 
                     time_step_in_hours=1,
-                    logging_period_in_hours=12,
-                    recording_images=True, plotted_property="C_hexose_root",
+                    logging_period_in_hours=1,
+                    recording_images=False, plotted_property="C_hexose_root",
                     recording_mtg=False,
                     recording_raw=False,
                     recording_sums=True,
@@ -20,7 +20,7 @@ def single_run(scenario, outputs_dirpath="test/outputs"):
     for step in range(1000):
         # Placed here also to capture mtg initialization
         logger()
-        root_bridges.run()
+        whole_plant.run()
     
     logger.stop()
     analyze_data(outputs_dirpath=outputs_dirpath, 
