@@ -8,11 +8,6 @@ python
 # openalea.plantgl dependancy of openalea.mtg
 openalea.mtg
 openalea.deploy
-openalea.lpy
-# alinea.caribu
-alinea.astk
-openalea.sconsx 
-m2w64-toolchain
 
 # packaged dependancies
 xarray
