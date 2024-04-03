@@ -4,6 +4,7 @@ from dataclasses import dataclass
 from metafspm.component_factory import *
 from metafspm.component import declare
 
+
 @dataclass
 class RootNitrogenModelCoupled(RootNitrogenModel):
     """
