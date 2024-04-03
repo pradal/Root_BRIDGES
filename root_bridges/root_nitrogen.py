@@ -4,8 +4,6 @@ from dataclasses import dataclass
 from metafspm.component_factory import *
 from metafspm.component import declare
 
-from numpy import pi, sqrt
-
 @dataclass
 class RootNitrogenModelCoupled(RootNitrogenModel):
     """
@@ -19,9 +17,6 @@ class RootNitrogenModelCoupled(RootNitrogenModel):
                                                  min_value="", max_value="", value_comment="", references="", DOI="",
                                                   variable_type="input", by="model_growth", state_variable_type="", edit_by="user")
 
-    # STATE VARIABLES
-    
-    # PARAMETERS
 
     def __init__(self, g, time_step, **scenario):
         """Pass to inherited init, necessary with data classes"""

@@ -17,6 +17,9 @@ class RootGrowthModelCoupled(RootGrowthModel):
     # INPUTS
     
     # STATE VARIABLES
+    amino_acids_consumption_by_growth: float = declare(default=0., unit="mol.s-1", unit_comment="", description="amino_acids consumption rate by growth processes", 
+                                                    min_value="", max_value="", value_comment="", references="", DOI="",
+                                                    variable_type="state_variable", by="model_growth", state_variable_type="", edit_by="user")
     
     # PARAMETERS
     Km_elongation_amino_acids: float = declare(default=1250 * 1e-6 / 6., unit="mol.g-1", unit_comment="of amino_acids", description="Affinity constant for root elongation regarding amino_acids consumption", 
@@ -34,7 +37,8 @@ class RootGrowthModelCoupled(RootGrowthModel):
     r_Nm_AA: float =     declare(default=1.4, unit="adim", unit_comment="mol of nitrogen per mol of amino acids", description="concentration stoechiometric ratio between mineral nitrogen and amino acids in roots", 
                                 min_value="", max_value="", value_comment="TODO : check estimation", references="", DOI="",
                                 variable_type="parameter", by="model_growth", state_variable_type="", edit_by="user")
-    
+
+
     def __init__(self, time_step, **scenario):
         """Pass to inherited init, necessary with data classes"""
         super().__init__(time_step, **scenario)
