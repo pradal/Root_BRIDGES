@@ -63,9 +63,8 @@ class RootCarbonModelCoupled(RootCarbonModel):
         In line with Thornley and Cannell 2000; Robinson 2001 and Barillot et al. 2016, respiratory costs are considered as proportionnal to transport and synthesis costs.
         Moreover, such synthesis can have side effects of carbohydrates catabolism affecting the respiration through the release of labile hexoses (Yemm and Willis 1956).
         """
-        print("respiring")
         transport_respiration = self.respi_costs_mineralN_import * (import_Nm + export_Nm + import_AA + export_AA)
-        anabolism_respiration = self.respi_costs_mineralN_reduction * AA_synthesis *self.r_Nm_AA
+        anabolism_respiration = self.respi_costs_mineralN_reduction * AA_synthesis * self.r_Nm_AA
         return transport_respiration + anabolism_respiration
 
     @potential
