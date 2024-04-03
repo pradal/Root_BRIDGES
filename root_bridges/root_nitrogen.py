@@ -39,11 +39,6 @@ class RootNitrogenModelCoupled(RootNitrogenModel):
                     + storage_catabolism / self.r_AA_stor
                     - AA_catabolism
                     - amino_acids_consumption_by_growth
-            ) - struct_mass_produced * 0.2 / 146
-        # glutamine 5 C -> 60g.mol-1 2N -> 28 g.mol-1 : C:N = 2.1
-        # Sachant C:N struct environ de 10 = (Chex + CAA)/NAA Chex = 10*28 - 60 = 220 g Chex.
-        # Sachang qu'un hexose contient 12*6=72 gC.mol-1 hex, c'est donc environ 3 hexoses pour 1 AA qui seraient consommés.
-        # La proportion d'AA consommée par g de struct mass est donc de 1*146/(3*180 + 1*146) = 0.2 (180 g.mol-1 pour le glucose)
-
+            ) 
         else:
             return 0
