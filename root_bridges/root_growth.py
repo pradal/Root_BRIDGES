@@ -34,10 +34,10 @@ class RootGrowthModelCoupled(RootGrowthModel):
     r_Nm_AA: float =     declare(default=1.4, unit="adim", unit_comment="mol of nitrogen per mol of amino acids", description="concentration stoechiometric ratio between mineral nitrogen and amino acids in roots", 
                                 min_value="", max_value="", value_comment="TODO : check estimation", references="", DOI="",
                                 variable_type="parameter", by="model_growth", state_variable_type="", edit_by="user")
-
-    def __init__(self, g, time_step, **scenario):
+    
+    def __init__(self, time_step, **scenario):
         """Pass to inherited init, necessary with data classes"""
-        super().__init__(g, time_step, **scenario)
+        super().__init__(time_step, **scenario)
 
 
     # SUBDIVISIONS OF THE SCHEDULING LOOP
