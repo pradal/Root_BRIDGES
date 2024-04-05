@@ -53,7 +53,6 @@ class RootGrowthModelCoupled(RootGrowthModel):
         EDIT : Added amino acids growth and elongation variables for reinitialization TODO : Really usefull for all? in Some funcs, it seems repeated.
         :return:
         """
-
         # We cover all the vertices in the MTG:
         for vid in self.g.vertices_iter(scale=1):
             # n represents the vertex:
@@ -271,7 +270,7 @@ class RootGrowthModelCoupled(RootGrowthModel):
             segment.hexose_available_for_thickening = parent.C_hexose_root * parent.struct_mass \
                                                       + segment.C_hexose_root * segment.struct_mass
             segment.amino_acids_available_for_thickening = parent.AA * parent.struct_mass \
-                                                      + segment.C_hexose_root * segment.struct_mass
+                                                      + segment.AA * segment.struct_mass
             # We calculate an average concentration of hexose that will help to regulate nodule growth:
             C_hexose_regulating_nodule_growth = segment.hexose_available_for_thickening / (
                     parent.struct_mass + segment.struct_mass)
@@ -805,7 +804,9 @@ class RootGrowthModelCoupled(RootGrowthModel):
 
 
     @postsegmentation
+    @state
     def root_hairs_dynamics(self):
+        
         """
         This function computes the evolution of the density and average length of root hairs along each root,
         and specifies which hairs are alive or dead.
