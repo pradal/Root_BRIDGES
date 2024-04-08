@@ -95,7 +95,6 @@ class RootGrowthModelCoupled(RootGrowthModel):
         :param elongation_time_in_seconds: the period of elongation (s)
         :return: the new elongated length
         """
-
         # If we keep the classical ArchiSimple rule:
         if self.ArchiSimple:
             # Then the elongation is calculated following the rules of Pages et al. (2014):
@@ -103,13 +102,13 @@ class RootGrowthModelCoupled(RootGrowthModel):
         else:
             # Otherwise, we additionally consider a limitation of the elongation according to the local concentration of hexose,
             # based on a Michaelis-Menten formalism:
-            if C_hexose_root > 0.:
+            if C_hexose_root > 0. and element.AA > 0:
                 elongation = self.EL * 2. * radius / (
                     ((1 + self.Km_elongation) / C_hexose_root) * ((1 + self.Km_elongation_amino_acids) / element.AA)
                         ) * elongation_time_in_seconds
             else:
                 elongation = 0.
-
+        
         # We calculate the new potential length corresponding to this elongation:
         new_length = initial_length + elongation
         if new_length < initial_length:
@@ -194,6 +193,7 @@ class RootGrowthModelCoupled(RootGrowthModel):
                 index = index_attempt
                 # We define the new element to consider according to the new index:
                 current_element = self.g.node(index)
+                
             # Otherwise, this is the last preceding element to consider:
             else:
                 # We finally add to the amount of hexose available for elongation a part of the hexose of the current element:
@@ -494,7 +494,7 @@ class RootGrowthModelCoupled(RootGrowthModel):
             temperature_time_adjustment = self.temperature_modification(process_at_T_ref=self.process_at_T_ref,
                                                                     soil_temperature=n.soil_temperature_in_Celsius,
                                                                     T_ref=self.T_ref, A=self.A, B=self.B, C=self.C)
-
+    
             # AVOIDANCE OF UNWANTED CASES:
             # -----------------------------
             # We make sure that the element is not dead:
@@ -506,7 +506,6 @@ class RootGrowthModelCoupled(RootGrowthModel):
             if n.potential_length <= n.initial_length and n.potential_radius <= n.initial_radius:
                 # In such case, we just pass to the next element in the iteration:
                 continue
-
             # INITIALIZATION AND CALCULATIONS OF POTENTIAL GROWTH DEMAND IN HEXOSE:
             # ----------------------------------------------------------------------
 
@@ -565,11 +564,12 @@ class RootGrowthModelCoupled(RootGrowthModel):
             # If elongation is possible:
             if n.potential_length > n.length:
                 hexose_possibly_required_for_elongation = n.hexose_possibly_required_for_elongation
+                amino_acids_possibly_required_for_elongation = n.amino_acids_possibly_required_for_elongation
                 list_of_elongation_supporting_elements = n.list_of_elongation_supporting_elements
                 list_of_elongation_supporting_elements_hexose = n.list_of_elongation_supporting_elements_hexose
                 list_of_elongation_supporting_elements_amino_acids = n.list_of_elongation_supporting_elements_amino_acids
                 list_of_elongation_supporting_elements_mass = n.list_of_elongation_supporting_elements_mass
-
+            
             # If radial growth is possible:
             if n.potential_radius > n.radius:
                 # We only consider the amount of hexose immediately available in the element that can increase in radius:
@@ -601,7 +601,6 @@ class RootGrowthModelCoupled(RootGrowthModel):
 
             # If the element can elongate:
             if n.potential_length > n.initial_length:
-
                 # CALCULATING ACTUAL ELONGATION:
                 # If elongation is possible but is limited by the amount of hexose available:
                 if n.potential_length >= length_max:
@@ -648,10 +647,8 @@ class RootGrowthModelCoupled(RootGrowthModel):
 
             # ACTUAL RADIAL GROWTH IS THEN CONSIDERED:
             # -----------------------------------------
-
             # If the radius of the element can increase:
             if n.potential_radius > n.initial_radius:
-
                 # CALCULATING ACTUAL THICKENING:
                 # We calculate the increase in volume that can be achieved with the amount of hexose available:
                 possible_radial_increase_in_volume_C = \

@@ -50,7 +50,7 @@ class RootCarbonModelCoupled(RootCarbonModel):
                                 min_value="", max_value="", value_comment="", references="Robinson 2001; Barillot et al., 2016", DOI="",
                                 variable_type="parameter", by="model_carbon", state_variable_type="", edit_by="user")
 
-
+    
     def __init__(self, g, time_step, **scenario):
         """Pass to inherited init, necessary with data classes"""
         super().__init__(g, time_step, **scenario)
@@ -81,6 +81,7 @@ class RootCarbonModelCoupled(RootCarbonModel):
         - Amino acid catabolism releasing hexose
         - Nitrogen metabolism related respiration costs
         """
+
         return C_hexose_root + (self.time_steps_in_seconds / (struct_mass + living_root_hairs_struct_mass)) * (
                 - hexose_exudation
                 + hexose_uptake_from_soil
@@ -97,3 +98,4 @@ class RootCarbonModelCoupled(RootCarbonModel):
                 - AA_synthesis * self.r_hexose_AA
                 + AA_catabolism / self.r_hexose_AA
                 - N_metabolic_respiration / 6.)
+                

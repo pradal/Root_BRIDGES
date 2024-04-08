@@ -29,6 +29,7 @@ class RootNitrogenModelCoupled(RootNitrogenModel):
         """
         EDIT : replaced structural nitrogen synthesis by rhizodep input in balance
         """
+
         if struct_mass > 0:
             return AA + (self.time_step / struct_mass) * (
                     diffusion_AA_phloem
