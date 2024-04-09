@@ -749,6 +749,10 @@ class RootGrowthModelCoupled(RootGrowthModel):
             n.struct_mass = n.volume * n.root_tissue_density
             n.struct_mass_produced = (n.volume - initial_volume) * n.root_tissue_density
 
+            if n.struct_mass < n.initial_struct_mass and n.struct_mass_produced > 0.:
+                print(f"!!! ERROR during initialisation for initial struct mass, no concentrations will be updated on {n.index()}")
+                n.initial_struct_mass = n.struct_mass
+
             # Verification: we check that no negative length or struct_mass have been generated!
             if n.volume < 0:
                 print("!!! ERROR: the element", n.index(), "of class", n.label, "has a length of", n.length,
