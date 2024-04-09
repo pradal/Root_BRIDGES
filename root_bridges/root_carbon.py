@@ -82,7 +82,7 @@ class RootCarbonModelCoupled(RootCarbonModel):
         - Nitrogen metabolism related respiration costs
         """
 
-        return C_hexose_root + (self.time_steps_in_seconds / (struct_mass + living_root_hairs_struct_mass)) * (
+        return C_hexose_root + (self.time_step_in_seconds / (struct_mass + living_root_hairs_struct_mass)) * (
                 - hexose_exudation
                 + hexose_uptake_from_soil
                 - mucilage_secretion
