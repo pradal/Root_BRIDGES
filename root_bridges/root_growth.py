@@ -19,16 +19,16 @@ class RootGrowthModelCoupled(RootGrowthModel):
     # STATE VARIABLES
     amino_acids_consumption_by_growth: float = declare(default=0., unit="mol.s-1", unit_comment="", description="amino_acids consumption rate by growth processes", 
                                                     min_value="", max_value="", value_comment="", references="", DOI="",
-                                                    variable_type="state_variable", by="model_growth", state_variable_type="", edit_by="user")
+                                                    variable_type="state_variable", by="model_growth", state_variable_type="extensive", edit_by="user")
     
     # PARAMETERS
-    Km_elongation_amino_acids: float = declare(default=1250 * 1e-6 / 6., unit="mol.g-1", unit_comment="of amino_acids", description="Affinity constant for root elongation regarding amino_acids consumption", 
+    Km_elongation_amino_acids: float = declare(default=1.250 * 1e-6, unit="mol.g-1", unit_comment="of amino_acids", description="Affinity constant for root elongation regarding amino_acids consumption",
                                                     min_value="", max_value="", value_comment="TODO : actualize", references="According to Barillot et al. (2016b): Km for root growth is 1250 umol C g-1 for sucrose. According to Gauthier et al (2020): Km for regulation of the RER by sucrose concentration in hz = 100-150 umol C g-1", DOI="",
                                                     variable_type="parameter", by="model_growth", state_variable_type="", edit_by="user")
     Km_nodule_thickening_amino_acids: float = declare(default=1250 * 1e-6 / 6. * 100, unit="mol.g-1", unit_comment="of amino_acids", description="Affinity constant for nodule thickening regarding amino_acids consumption", 
                                                     min_value="", max_value="", value_comment="Km_elongation * 100, TODO : actualize", references="", DOI="",
                                                     variable_type="parameter", by="model_growth", state_variable_type="", edit_by="user")
-    struct_mass_N_content: float = declare(default=0.1 / 12.01, unit="mol.g-1", unit_comment="of organic nitrogen", description="organic nitrogen content of structural mass", 
+    struct_mass_N_content: float = declare(default=0.01 / 12.01, unit="mol.g-1", unit_comment="of organic nitrogen", description="organic nitrogen content of structural mass",
                                                     min_value="", max_value="", value_comment="TODO : actualize", references="We assume that the structural mass contains 10% of C. (??)", DOI="",
                                                     variable_type="parameter", by="model_growth", state_variable_type="", edit_by="user")
     yield_growth_N: float = declare(default=1., unit="adim", unit_comment="mol of N per mol of C used for structural mass", description="Growth yield of amino acids", 
@@ -43,6 +43,16 @@ class RootGrowthModelCoupled(RootGrowthModel):
         """Pass to inherited init, necessary with data classes"""
         super().__init__(time_step, **scenario)
 
+    def post_growth_updating(self):
+        self.vertices = self.g.vertices(scale=self.g.max_scale())
+        for vid in self.vertices:
+            if vid not in self.amino_acids_consumption_by_growth.keys():
+                parent = self.g.parent(vid)
+                # we partition the initial flow in the parent accounting for mass fraction
+                # We use struct_mass, the resulting structural mass after growth
+                mass_fraction = self.struct_mass[vid] / (self.struct_mass[vid] + self.struct_mass[parent])
+                self.amino_acids_consumption_by_growth.update({vid: self.amino_acids_consumption_by_growth[parent] * mass_fraction,
+                                            parent: self.amino_acids_consumption_by_growth[parent] * (1 - mass_fraction)})
 
     # SUBDIVISIONS OF THE SCHEDULING LOOP
     # -----------------------------------
@@ -82,7 +92,6 @@ class RootGrowthModelCoupled(RootGrowthModel):
             n.initial_living_root_hairs_struct_mass = n.living_root_hairs_struct_mass
         return
 
-
     # Function for calculating root elongation:
     def elongated_length(self, element, initial_length: float, radius: float, C_hexose_root: float, elongation_time_in_seconds: float):
         """
@@ -95,6 +104,7 @@ class RootGrowthModelCoupled(RootGrowthModel):
         :param elongation_time_in_seconds: the period of elongation (s)
         :return: the new elongated length
         """
+
         # If we keep the classical ArchiSimple rule:
         if self.ArchiSimple:
             # Then the elongation is calculated following the rules of Pages et al. (2014):
@@ -102,10 +112,16 @@ class RootGrowthModelCoupled(RootGrowthModel):
         else:
             # Otherwise, we additionally consider a limitation of the elongation according to the local concentration of hexose,
             # based on a Michaelis-Menten formalism:
+            print(C_hexose_root, element.AA, element.index())
             if C_hexose_root > 0. and element.AA > 0:
-                elongation = self.EL * 2. * radius / (
-                    ((1 + self.Km_elongation) / C_hexose_root) * ((1 + self.Km_elongation_amino_acids) / element.AA)
-                        ) * elongation_time_in_seconds
+                print("who is smaller ", (C_hexose_root / (C_hexose_root + self.Km_elongation)), (element.AA / (element.AA + self.Km_elongation_amino_acids)))
+                # michaelis_menten_limitation = ((1 + self.Km_elongation) / C_hexose_root) * ((1 + self.Km_elongation_amino_acids) / element.AA)
+                michaelis_menten_limitation = min((C_hexose_root / (C_hexose_root + self.Km_elongation)), (element.AA / (element.AA + self.Km_elongation_amino_acids)))
+                potential_elongation = self.EL * 2. * radius * elongation_time_in_seconds
+                print("elongation pot", potential_elongation, michaelis_menten_limitation)
+                elongation = potential_elongation * michaelis_menten_limitation
+                print("")
+                print("elongation", elongation)
             else:
                 elongation = 0.
         
@@ -115,7 +131,6 @@ class RootGrowthModelCoupled(RootGrowthModel):
             print("!!! ERROR: There is a problem of elongation, with the initial length", initial_length,
                   " and the radius", radius, "and the elongation time", elongation_time_in_seconds)
         return new_length
-    
 
     # Function for calculating the amount of C to be used in neighbouring elements for sustaining root elongation:
     def calculating_supply_for_elongation(self, element):
@@ -592,18 +607,21 @@ class RootGrowthModelCoupled(RootGrowthModel):
             # ---------------------------------------
 
             # We calculate the maximal possible length of the root element according to all the hexose available for elongation:
+            print("hex aa amounts avail", hexose_possibly_required_for_elongation, amino_acids_possibly_required_for_elongation)
             volume_max_C = initial_volume + hexose_possibly_required_for_elongation * 6. \
                          / (n.root_tissue_density * self.struct_mass_C_content) * self.yield_growth
             volume_max_N = initial_volume + amino_acids_possibly_required_for_elongation * self.r_Nm_AA \
                          / (n.root_tissue_density * self.struct_mass_N_content) * self.yield_growth_N
+            print("volumes", volume_max_C, volume_max_N, initial_volume)
             # We account for the minimal volume defining the most limiting factor between C and N
-            length_max = min(volume_max_C, volume_max_N) / (pi * n.initial_radius ** 2)
-
+            length_max = 1e5*min(volume_max_C, volume_max_N) / (pi * n.initial_radius ** 2)
+            print("length range", n.initial_length, length_max)
             # If the element can elongate:
             if n.potential_length > n.initial_length:
                 # CALCULATING ACTUAL ELONGATION:
                 # If elongation is possible but is limited by the amount of hexose available:
                 if n.potential_length >= length_max:
+                    print("sticking to max")
                     # Elongation is limited using all the amount of hexose available:
                     n.length = length_max
                 # Otherwise, elongation can be done up to the full potential:
@@ -768,7 +786,6 @@ class RootGrowthModelCoupled(RootGrowthModel):
             # -----------------------------------------------
             # If there has been an actual elongation:
             if n.length > n.initial_length:
-
                 # If the elongated apex corresponded to any primordium that has been allowed to emerge:
                 if n.type == "Seminal_root_before_emergence" \
                         or n.type == "Adventitious_root_before_emergence" \
