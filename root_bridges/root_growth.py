@@ -112,16 +112,11 @@ class RootGrowthModelCoupled(RootGrowthModel):
         else:
             # Otherwise, we additionally consider a limitation of the elongation according to the local concentration of hexose,
             # based on a Michaelis-Menten formalism:
-            print(C_hexose_root, element.AA, element.index())
             if C_hexose_root > 0. and element.AA > 0:
-                print("who is smaller ", (C_hexose_root / (C_hexose_root + self.Km_elongation)), (element.AA / (element.AA + self.Km_elongation_amino_acids)))
                 # michaelis_menten_limitation = ((1 + self.Km_elongation) / C_hexose_root) * ((1 + self.Km_elongation_amino_acids) / element.AA)
                 michaelis_menten_limitation = min((C_hexose_root / (C_hexose_root + self.Km_elongation)), (element.AA / (element.AA + self.Km_elongation_amino_acids)))
                 potential_elongation = self.EL * 2. * radius * elongation_time_in_seconds
-                print("elongation pot", potential_elongation, michaelis_menten_limitation)
                 elongation = potential_elongation * michaelis_menten_limitation
-                print("")
-                print("elongation", elongation)
             else:
                 elongation = 0.
         
@@ -414,7 +409,7 @@ class RootGrowthModelCoupled(RootGrowthModel):
                 # based on a Michaelis-Menten formalism that regulates the maximal rate of increase
                 # according to the amount of hexose available:
                 thickening_rate = self.relative_root_thickening_rate_max / (
-                    ((1+self.Km_nodule_thickening) / C_hexose_regulating_nodule_growth)*((1+self.Km_nodule_thickening_amino_acids) / N_amino_acids_regulating_nodule_growth)
+                    ((1+self.Km_nodule_thickening) / segment.C_hexose_root)*((1+self.Km_nodule_thickening_amino_acids) / segment.AA)
                 )
 
                 # We calculate a coefficient that will modify the rate of thickening according to soil temperature
@@ -607,21 +602,18 @@ class RootGrowthModelCoupled(RootGrowthModel):
             # ---------------------------------------
 
             # We calculate the maximal possible length of the root element according to all the hexose available for elongation:
-            print("hex aa amounts avail", hexose_possibly_required_for_elongation, amino_acids_possibly_required_for_elongation)
             volume_max_C = initial_volume + hexose_possibly_required_for_elongation * 6. \
                          / (n.root_tissue_density * self.struct_mass_C_content) * self.yield_growth
             volume_max_N = initial_volume + amino_acids_possibly_required_for_elongation * self.r_Nm_AA \
                          / (n.root_tissue_density * self.struct_mass_N_content) * self.yield_growth_N
-            print("volumes", volume_max_C, volume_max_N, initial_volume)
             # We account for the minimal volume defining the most limiting factor between C and N
-            length_max = 1e5*min(volume_max_C, volume_max_N) / (pi * n.initial_radius ** 2)
-            print("length range", n.initial_length, length_max)
+            length_max = min(volume_max_C, volume_max_N) / (pi * n.initial_radius ** 2)
+
             # If the element can elongate:
             if n.potential_length > n.initial_length:
                 # CALCULATING ACTUAL ELONGATION:
                 # If elongation is possible but is limited by the amount of hexose available:
                 if n.potential_length >= length_max:
-                    print("sticking to max")
                     # Elongation is limited using all the amount of hexose available:
                     n.length = length_max
                 # Otherwise, elongation can be done up to the full potential:
@@ -965,8 +957,8 @@ class RootGrowthModelCoupled(RootGrowthModel):
                 # The new potential root hairs length is calculated according to the elongation rate,
                 # corrected by temperature and modulated by the concentration of hexose (in the same way as for root
                 # elongation) available in the root hair zone on the root element:
-                new_length = n.root_hair_length + self.root_hairs_elongation_rate * self.root_hair_radius * (n.actual_length_with_hairs / n.length) \
-                             / (((1 + self.Km_elongation) / n.C_hexose_root) * ((1 + self.Km_elongation_amino_acids) / n.AA)) * elapsed_thermal_time
+                cn_limitation = min((n.C_hexose_root / (n.C_hexose_root + self.Km_elongation)), (n.AA / (n.AA + self.Km_elongation_amino_acids)))
+                new_length = n.root_hair_length + self.root_hairs_elongation_rate * self.root_hair_radius * (n.actual_length_with_hairs / n.length) * cn_limitation
                 
                 # If the new calculated length is higher than the maximal length:
                 if new_length > self.root_hair_max_length:
