@@ -1,7 +1,7 @@
 RootAnatomy:
   RootAnatomy: {}
   RootCarbonModelCoupled: {}
-  RootGrowthModel:
+  RootGrowthModelCoupled:
     distance_from_tip:
       distance_from_tip: 1.0
     length:
@@ -27,7 +27,7 @@ RootCarbonModelCoupled:
     symplasmic_volume:
       symplasmic_volume: 1.0
   RootCarbonModelCoupled: {}
-  RootGrowthModel:
+  RootGrowthModelCoupled:
     distance_from_tip:
       distance_from_tip: 1.0
     hexose_consumption_by_growth:
@@ -44,7 +44,19 @@ RootCarbonModelCoupled:
       struct_mass: 1.0
     type:
       type: 1.0
-  RootNitrogenModelCoupled: {}
+  RootNitrogenModelCoupled:
+    AA_synthesis:
+      AA_synthesis: 1.0
+    AA_catabolism:
+      AA_catabolism: 1.0
+    import_Nm:
+      import_Nm: 1.0
+    import_AA:
+      import_AA: 1.0
+    export_Nm:
+      export_Nm: 1.0
+    export_AA:
+      export_AA: 1.0
   RootWaterModel: {}
   ShootModel:
     sucrose_input_rate:
@@ -58,12 +70,12 @@ RootCarbonModelCoupled:
       Cs_mucilage_soil: 1.0
     soil_temperature_in_Celsius:
       soil_temperature_in_Celsius: 1.0
-RootGrowthModel:
+RootGrowthModelCoupled:
   RootAnatomy:
     root_tissue_density:
       root_tissue_density: 1.0
   RootCarbonModelCoupled: {}
-  RootGrowthModel: {}
+  RootGrowthModelCoupled: {}
   RootNitrogenModelCoupled: {}
   RootWaterModel: {}
   ShootModel: {}
@@ -82,12 +94,16 @@ RootNitrogenModelCoupled:
       root_exchange_surface: 1.0
     xylem_differentiation_factor:
       xylem_differentiation_factor: 1.0
+    symplasmic_volume:
+      symplasmic_volume: 1.0
+    xylem_volume:
+      xylem_volume: 1.0
   RootCarbonModelCoupled:
     C_hexose_reserve:
       C_hexose_reserve: 1.0
     C_hexose_root:
       C_hexose_root: 1.0
-  RootGrowthModel:
+  RootGrowthModelCoupled:
     initial_struct_mass:
       initial_struct_mass: 1.0
     length:
@@ -100,6 +116,8 @@ RootNitrogenModelCoupled:
       struct_mass_produced: 1.0
     thermal_time_since_emergence:
       thermal_time_since_emergence: 1.0
+    amino_acids_consumption_by_growth:
+      amino_acids_consumption_by_growth: 1.0
   RootNitrogenModelCoupled: {}
   RootWaterModel:
     axial_export_water_up:
@@ -115,7 +133,7 @@ RootNitrogenModelCoupled:
       Export_cytokinins: 1.0
   SoilModel:
     soil_AA:
-      C_AA_soil: 1.0
+      C_amino_acids_soil: 1.0
     soil_Nm:
       C_mineralN_soil: 1.0
 RootWaterModel:
@@ -127,7 +145,7 @@ RootWaterModel:
     xylem_volume:
       xylem_volume: 1.0
   RootCarbonModelCoupled: {}
-  RootGrowthModel:
+  RootGrowthModelCoupled:
     length:
       length: 1.0
     radius:
@@ -147,13 +165,15 @@ RootWaterModel:
 ShootModel:
   RootAnatomy: {}
   RootCarbonModelCoupled: {}
-  RootGrowthModel: {}
+  RootGrowthModelCoupled: {}
   RootNitrogenModelCoupled: {}
   RootWaterModel: {}
   ShootModel: {}
   SoilModel: {}
 SoilModel:
-  RootAnatomy: {}
+  RootAnatomy:
+    root_exchange_surface:
+      root_exchange_surface: 1.0
   RootCarbonModelCoupled:
     cells_release:
       cells_release: 1.0
@@ -167,10 +187,22 @@ SoilModel:
       phloem_hexose_exudation: 1.0
     phloem_hexose_uptake_from_soil:
       phloem_hexose_uptake_from_soil: 1.0
-  RootGrowthModel:
+  RootGrowthModelCoupled:
     struct_mass:
       struct_mass: 1.0
-  RootNitrogenModelCoupled: {}
+  RootNitrogenModelCoupled:
+    mineralN_uptake:
+      import_Nm: 1.0
+    amino_acids_uptake:
+      import_AA: 1.0
+    mineralN_diffusion_from_roots:
+      diffusion_Nm_soil: 1.0
+    amino_acids_diffusion_from_roots:
+      diffusion_AA_soil: 1.0
+    mineralN_diffusion_from_xylem:
+      diffusion_Nm_soil_xylem: 1.0
+    amino_acids_diffusion_from_xylem:
+      diffusion_AA_soil_xylem: 1.0
   RootWaterModel: {}
   ShootModel: {}
   SoilModel:

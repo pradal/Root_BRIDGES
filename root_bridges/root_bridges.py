@@ -6,18 +6,18 @@ import root_bridges
 # Edited models
 from root_bridges.root_carbon import RootCarbonModelCoupled
 from root_bridges.root_nitrogen import RootNitrogenModelCoupled
+from root_bridges.root_growth import RootGrowthModelCoupled
+from root_bridges.soil_model import SoilModel
 
 # Untouched models
-from rhizodep.root_growth import RootGrowthModel
 from rhizodep.root_anatomy import RootAnatomy
-from rhizodep.rhizo_soil import SoilModel
-
 from root_cynaps.root_water import RootWaterModel
 
 from Data_enforcer.shoot import ShootModel
 
 # Utilities
 from metafspm.composite_wrapper import CompositeModel
+from metafspm.component_factory import Choregrapher
 
 
 class Model(CompositeModel):
@@ -44,26 +44,30 @@ class Model(CompositeModel):
         :param time_step: the resolution time_step of the model in seconds.
         """
 
+        # DECLARE GLOBAL SIMULATION TIME STEP
+        Choregrapher().add_simulation_time_step(time_step)
+
         # INIT INDIVIDUAL MODULES
-        self.root_growth = RootGrowthModel(time_step, **scenario)
+        self.root_growth = RootGrowthModelCoupled(time_step, **scenario)
         self.g = self.root_growth.g
         self.root_anatomy = RootAnatomy(self.g, time_step, **scenario)
-        self.root_water = RootWaterModel(self.g, time_step, **scenario)
-        self.root_carbon = RootCarbonModelCoupled(self.g, time_step, **scenario)
+        self.root_water = RootWaterModel(self.g, time_step/10, **scenario)
+        self.root_carbon = RootCarbonModelCoupled(self.g, time_step/4, **scenario)
         self.root_nitrogen = RootNitrogenModelCoupled(self.g, time_step, **scenario)
         self.soil = SoilModel(self.g, time_step, **scenario)
+        self.soil_voxels = self.soil.voxels
 
         # Initialisation of Shoot modules
         self.shoot = ShootModel(self.g)
 
         # EXPECTED !
-        self.models = (self.root_growth, self.root_anatomy, self.root_water, self.root_carbon, self.root_nitrogen, self.soil, self.shoot)
+        self.models = (self.root_growth, self.root_anatomy, self.root_water, self.root_carbon, self.root_nitrogen, self.soil)
+        self.data_structures = {"root": self.g, "soil": self.soil_voxels}
 
         # LINKING MODULES
         self.link_around_mtg(translator_path=root_bridges.__path__[0])
 
-        # Some initialization must be performed AFTER linking modules
-        [m.post_coupling_init() for m in self.models]
+        self.root_water.post_coupling_init()
 
     def run(self):
         # Update environment boundary conditions
@@ -89,7 +93,4 @@ class Model(CompositeModel):
         self.root_water()
         self.root_carbon()
         self.root_nitrogen()
-        #self.root_nitrogen(specific_process=["rate", "stepinit"])
-        #self.root_carbon(specifi_process=["rate"])
-        #self.root_nitrogen(excluded_process=["rate", "stepinit"])
-        #self.root_carbon(excluded_process=["rate"])
+
