@@ -294,7 +294,7 @@ class RootGrowthModelCoupled(RootGrowthModel):
             # We calculate a coefficient that will modify the rate of thickening according to soil temperature
             # assuming a linear relationship (this is equivalent as the calculation of "growth degree-days):
             thickening_rate = thickening_rate * self.temperature_modification(process_at_T_ref=self.process_at_T_ref,
-                                                                    soil_temperature=segment.soil_temperature_in_Celsius,
+                                                                    soil_temperature=segment.soil_temperature,
                                                                     T_ref=self.T_ref, A=self.A, B=self.B, C=self.C)
             segment.theoretical_radius = segment.radius * (1 + thickening_rate * self.time_step_in_seconds)
             if segment.theoretical_radius > self.nodule_max_radius:
@@ -327,7 +327,7 @@ class RootGrowthModelCoupled(RootGrowthModel):
         # We calculate a coefficient that will modify the different "ages" experienced by roots according to soil
         # temperature assuming a linear relationship (this is equivalent as the calculation of "growth degree-days):
         temperature_time_adjustment = self.temperature_modification(process_at_T_ref=self.process_at_T_ref,
-                                                                    soil_temperature=segment.soil_temperature_in_Celsius,
+                                                                    soil_temperature=segment.soil_temperature,
                                                                     T_ref=self.T_ref, A=self.A, B=self.B, C=self.C)
 
         # CHECKING WHETHER THE APEX OF THE ROOT AXIS HAS STOPPED GROWING:
@@ -415,7 +415,7 @@ class RootGrowthModelCoupled(RootGrowthModel):
                 # We calculate a coefficient that will modify the rate of thickening according to soil temperature
                 # assuming a linear relationship (this is equivalent as the calculation of "growth degree-days):
                 thickening_rate = thickening_rate * self.temperature_modification(process_at_T_ref=self.process_at_T_ref,
-                                                                    soil_temperature=segment.soil_temperature_in_Celsius,
+                                                                    soil_temperature=segment.soil_temperature,
                                                                     T_ref=self.T_ref, A=self.A, B=self.B, C=self.C)
                 # The maximal possible new radius according to this regulation is therefore:
                 new_radius_max = (1 + thickening_rate * self.time_step_in_seconds) * segment.initial_radius
@@ -502,7 +502,7 @@ class RootGrowthModelCoupled(RootGrowthModel):
             # We calculate a coefficient that will modify the different "ages" experienced by roots according to soil
             # temperature assuming a linear relationship (this is equivalent as the calculation of "growth degree-days):
             temperature_time_adjustment = self.temperature_modification(process_at_T_ref=self.process_at_T_ref,
-                                                                    soil_temperature=n.soil_temperature_in_Celsius,
+                                                                    soil_temperature=n.soil_temperature,
                                                                     T_ref=self.T_ref, A=self.A, B=self.B, C=self.C)
     
             # AVOIDANCE OF UNWANTED CASES:
@@ -850,7 +850,7 @@ class RootGrowthModelCoupled(RootGrowthModel):
 
             # We calculate the equivalent of a thermal time for the current time step:
             temperature_time_adjustment = self.temperature_modification(process_at_T_ref=self.process_at_T_ref,
-                                                                    soil_temperature=n.soil_temperature_in_Celsius,
+                                                                    soil_temperature=n.soil_temperature,
                                                                     T_ref=self.T_ref, A=self.A, B=self.B, C=self.C)
             elapsed_thermal_time = self.time_step_in_seconds * temperature_time_adjustment
 
@@ -1085,7 +1085,7 @@ class RootGrowthModelCoupled(RootGrowthModel):
                                                  hexose_possibly_required_for_elongation=0.,
                                                  # Time indications:
                                                  # ------------------
-                                                 soil_temperature_in_Celsius=15,  # TODO change
+                                                 soil_temperature=7.8,  # TODO change
                                                  growth_duration=self.GDs * (2 * radius) ** 2,
                                                  life_duration=self.LDs * 2. * radius * self.new_root_tissue_density,
                                                  actual_time_since_primordium_formation=0.,
@@ -1173,7 +1173,7 @@ class RootGrowthModelCoupled(RootGrowthModel):
                                                  hexose_consumption_by_growth=mother_element.hexose_consumption_by_growth,
                                                  # Time indications:
                                                  # ------------------
-                                                 soil_temperature_in_Celsius=mother_element.soil_temperature_in_Celsius,
+                                                 soil_temperature=mother_element.soil_temperature,
                                                  growth_duration=mother_element.growth_duration,
                                                  life_duration=mother_element.life_duration,
                                                  actual_time_since_primordium_formation=mother_element.actual_time_since_primordium_formation,
