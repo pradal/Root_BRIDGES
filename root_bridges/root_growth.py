@@ -39,9 +39,9 @@ class RootGrowthModelCoupled(RootGrowthModel):
                                 variable_type="parameter", by="model_growth", state_variable_type="", edit_by="user")
 
 
-    def __init__(self, time_step, **scenario):
+    def __init__(self, g=None ,time_step=3600, **scenario):
         """Pass to inherited init, necessary with data classes"""
-        super().__init__(time_step, **scenario)
+        super().__init__(g, time_step, **scenario)
 
     def post_growth_updating(self):
         self.vertices = self.g.vertices(scale=self.g.max_scale())
@@ -994,3 +994,204 @@ class RootGrowthModelCoupled(RootGrowthModel):
             n.amino_acids_consumption_by_growth_amount += amino_acids_comsumption
             n.amino_acids_consumption_by_growth += amino_acids_comsumption / self.time_step_in_seconds
             n.resp_growth += hexose_consumption * 6. * (1 - self.yield_growth)
+
+    # Adding a new root element with pre-defined properties:
+    def ADDING_A_CHILD(self, mother_element, edge_type='+', label='Apex', type='Normal_root_before_emergence',
+                       root_order=1, angle_down=45., angle_roll=0., length=0., radius=0.,
+                       identical_properties=True, nil_properties=False):
+        """
+        This function creates a new child element on the mother element, based on the function add_child.
+        When called, this allows to automatically define standard properties without defining them in the main code.
+        :param mother_element: the node of the MTG on which the child element will be created
+        :param edge_type: the type of relationship between the mother element and its child ('+' or '<')
+        :param label: label of the child element
+        :param type: type of the child element
+        :param root_order: root_order of the child element
+        :param angle_down: angle_down of the child element
+        :param angle_roll: angle_roll of the child element
+        :param length: length of the child element
+        :param radius: radius of the child element
+        :param identical_properties: if True, the main properties of the child will be identical to those of the mother
+        :param nil_properties: if True, the main properties of the child will be 0
+        :return: the new child element
+        """
+
+        # TODO# FOR TRISTAN: When working with a dynamic root structure, you will need to specify in this function
+        #  "ADDING_A_CHILD" your new variables that will either be set to 0 (nil properties) or be equal to that of the mother
+        #  element.
+
+        # If nil_properties = True, then we set most of the properties of the new element to 0:
+        if nil_properties:
+            new_child = mother_element.add_child(edge_type=edge_type,
+                                                 # Characteristics:
+                                                 # -----------------
+                                                 label=label,
+                                                 type=type,
+                                                 root_order=root_order,
+                                                 # Authorizations and C requirements:
+                                                 # -----------------------------------
+                                                 lateral_root_emergence_possibility='Impossible',
+                                                 emergence_cost=0.,
+                                                 # Geometry and topology:
+                                                 # -----------------------
+                                                 angle_down=angle_down,
+                                                 angle_roll=angle_roll,
+                                                 # The length of the primordium is set to 0:
+                                                 length=length,
+                                                 radius=radius,
+                                                 original_radius=radius,
+                                                 potential_length=0.,
+                                                 theoretical_radius=radius,
+                                                 potential_radius=radius,
+                                                 initial_length=0.,
+                                                 initial_radius=radius,
+                                                 volume=0.,
+                                                 root_tissue_density=self.new_root_tissue_density,
+                                                 dist_to_ramif=0.,
+                                                 distance_from_tip=0.,
+                                                 former_distance_from_tip=0.,
+                                                 actual_elongation=0.,
+                                                 actual_elongation_rate=0.,
+                                                 # Quantities and concentrations:
+                                                 # -------------------------------
+                                                 struct_mass=0.,
+                                                 initial_struct_mass=0.,
+                                                 C_hexose_root=0.,
+                                                 # Root hairs:
+                                                 # ------------
+                                                 root_hair_radius=self.root_hair_radius,
+                                                 root_hair_length=0.,
+                                                 actual_length_with_hairs=0.,
+                                                 living_root_hairs_number=0.,
+                                                 dead_root_hairs_number=0.,
+                                                 total_root_hairs_number=0.,
+                                                 actual_time_since_root_hairs_emergence_started=0.,
+                                                 thermal_time_since_root_hairs_emergence_started=0.,
+                                                 actual_time_since_root_hairs_emergence_stopped=0.,
+                                                 thermal_time_since_root_hairs_emergence_stopped=0.,
+                                                 all_root_hairs_formed=False,
+                                                 root_hairs_lifespan=self.root_hairs_lifespan,
+                                                 root_hairs_struct_mass=0.,
+                                                 root_hairs_struct_mass_produced=0.,
+                                                 initial_living_root_hairs_struct_mass=0.,
+                                                 living_root_hairs_struct_mass=0.,
+                                                 # Fluxes:
+                                                 # --------
+                                                 resp_growth=0.,
+                                                 struct_mass_produced=0.,
+                                                 hexose_growth_demand=0.,
+                                                 hexose_consumption_by_growth_amount=0.,
+                                                 hexose_consumption_by_growth=0.,
+                                                 hexose_possibly_required_for_elongation=0.,
+                                                 # Time indications:
+                                                 # ------------------
+                                                 soil_temperature_in_Celsius=15,  # TODO change
+                                                 growth_duration=self.GDs * (2 * radius) ** 2,
+                                                 life_duration=self.LDs * 2. * radius * self.new_root_tissue_density,
+                                                 actual_time_since_primordium_formation=0.,
+                                                 actual_time_since_emergence=0.,
+                                                 actual_time_since_cells_formation=0.,
+                                                 actual_potential_time_since_emergence=0.,
+                                                 actual_time_since_growth_stopped=0.,
+                                                 actual_time_since_death=0.,
+                                                 thermal_time_since_primordium_formation=0.,
+                                                 thermal_time_since_emergence=0.,
+                                                 thermal_time_since_cells_formation=0.,
+                                                 thermal_potential_time_since_emergence=0.,
+                                                 thermal_time_since_growth_stopped=0.,
+                                                 thermal_time_since_death=0.,
+                                                 AA=0.,
+                                                 amino_acids_consumption_by_growth_amount=0.,
+                                                 amino_acids_consumption_by_growth=0.,
+                                                 amino_acids_possibly_required_for_elongation=0.,
+                                                 amino_acids_growth_demand=0.
+                                                 )
+            return new_child
+
+        # Otherwise, if identical_properties=True, then we copy most of the properties of the mother element in the new element:
+        elif identical_properties:
+            new_child = mother_element.add_child(edge_type=edge_type,
+                                                 # Characteristics:
+                                                 # -----------------
+                                                 label=label,
+                                                 type=type,
+                                                 root_order=root_order,
+                                                 # Authorizations and C requirements:
+                                                 # -----------------------------------
+                                                 lateral_root_emergence_possibility='Impossible',
+                                                 emergence_cost=0.,
+                                                 # Geometry and topology:
+                                                 # -----------------------
+                                                 angle_down=angle_down,
+                                                 angle_roll=angle_roll,
+                                                 # The length of the primordium is set to 0:
+                                                 length=length,
+                                                 radius=mother_element.radius,
+                                                 original_radius=mother_element.radius,
+                                                 potential_length=length,
+                                                 theoretical_radius=mother_element.theoretical_radius,
+                                                 potential_radius=mother_element.potential_radius,
+                                                 initial_length=length,
+                                                 initial_radius=mother_element.radius,
+                                                 volume=0.,
+                                                 root_tissue_density=mother_element.root_tissue_density,
+                                                 dist_to_ramif=mother_element.dist_to_ramif,
+                                                 distance_from_tip=mother_element.distance_from_tip,
+                                                 former_distance_from_tip=mother_element.former_distance_from_tip,
+                                                 actual_elongation=mother_element.actual_elongation,
+                                                 actual_elongation_rate=mother_element.actual_elongation_rate,
+                                                 # Quantities and concentrations:
+                                                 # -------------------------------
+                                                 struct_mass=mother_element.struct_mass,
+                                                 initial_struct_mass=mother_element.initial_struct_mass,
+                                                 C_hexose_root=mother_element.C_hexose_root,
+                                                 # Root hairs:
+                                                 # ------------
+                                                 root_hair_radius=mother_element.root_hair_radius,
+                                                 root_hair_length=mother_element.root_hair_length,
+                                                 actual_length_with_hairs=mother_element.actual_length_with_hairs,
+                                                 living_root_hairs_number=mother_element.living_root_hairs_number,
+                                                 dead_root_hairs_number=mother_element.dead_root_hairs_number,
+                                                 total_root_hairs_number=mother_element.total_root_hairs_number,
+                                                 actual_time_since_root_hairs_emergence_started=mother_element.actual_time_since_root_hairs_emergence_started,
+                                                 thermal_time_since_root_hairs_emergence_started=mother_element.thermal_time_since_root_hairs_emergence_started,
+                                                 actual_time_since_root_hairs_emergence_stopped=mother_element.actual_time_since_root_hairs_emergence_stopped,
+                                                 thermal_time_since_root_hairs_emergence_stopped=mother_element.thermal_time_since_root_hairs_emergence_stopped,
+                                                 all_root_hairs_formed=mother_element.all_root_hairs_formed,
+                                                 root_hairs_lifespan=mother_element.root_hairs_lifespan,
+                                                 root_hairs_struct_mass=mother_element.root_hairs_struct_mass,
+                                                 root_hairs_struct_mass_produced=mother_element.root_hairs_struct_mass_produced,
+                                                 living_root_hairs_struct_mass=mother_element.living_root_hairs_struct_mass,
+                                                 initial_living_root_hairs_struct_mass=mother_element.initial_living_root_hairs_struct_mass,
+                                                 # Fluxes:
+                                                 # -------
+                                                 resp_growth=mother_element.resp_growth,
+                                                 struct_mass_produced=mother_element.struct_mass_produced,
+                                                 hexose_growth_demand=mother_element.hexose_growth_demand,
+                                                 hexose_possibly_required_for_elongation=mother_element.hexose_possibly_required_for_elongation,
+                                                 hexose_consumption_by_growth_amount=mother_element.hexose_consumption_by_growth_amount,
+                                                 hexose_consumption_by_growth=mother_element.hexose_consumption_by_growth,
+                                                 # Time indications:
+                                                 # ------------------
+                                                 soil_temperature_in_Celsius=mother_element.soil_temperature_in_Celsius,
+                                                 growth_duration=mother_element.growth_duration,
+                                                 life_duration=mother_element.life_duration,
+                                                 actual_time_since_primordium_formation=mother_element.actual_time_since_primordium_formation,
+                                                 actual_time_since_emergence=mother_element.actual_time_since_emergence,
+                                                 actual_time_since_cells_formation=mother_element.actual_time_since_cells_formation,
+                                                 actual_time_since_growth_stopped=mother_element.actual_time_since_growth_stopped,
+                                                 actual_time_since_death=mother_element.actual_time_since_death,
+
+                                                 thermal_time_since_primordium_formation=mother_element.thermal_time_since_primordium_formation,
+                                                 thermal_time_since_emergence=mother_element.thermal_time_since_emergence,
+                                                 thermal_time_since_cells_formation=mother_element.thermal_time_since_cells_formation,
+                                                 thermal_potential_time_since_emergence=mother_element.thermal_potential_time_since_emergence,
+                                                 thermal_time_since_growth_stopped=mother_element.thermal_time_since_growth_stopped,
+                                                 thermal_time_since_death=mother_element.thermal_time_since_death,
+                                                 AA=mother_element.AA,
+                                                 amino_acids_consumption_by_growth_amount=0.,
+                                                 amino_acids_consumption_by_growth=0.,
+                                                 amino_acids_possibly_required_for_elongation=0.,
+                                                 amino_acids_growth_demand=0.
+                                                 )
+            return new_child

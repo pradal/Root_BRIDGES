@@ -3,7 +3,6 @@
 *.nc
 *.pckl
 
-
 # All output files
 *outputs/*
 outputs

@@ -13,8 +13,6 @@ from root_bridges.soil_model import SoilModel
 from rhizodep.root_anatomy import RootAnatomy
 from root_cynaps.root_water import RootWaterModel
 
-from Data_enforcer.shoot import ShootModel
-
 # Utilities
 from metafspm.composite_wrapper import CompositeModel
 from metafspm.component_factory import Choregrapher
@@ -46,19 +44,19 @@ class Model(CompositeModel):
 
         # DECLARE GLOBAL SIMULATION TIME STEP
         Choregrapher().add_simulation_time_step(time_step)
+        self.time = 0
+        parameters = scenario["parameters"]
+        self.input_tables = scenario["input_tables"]
 
         # INIT INDIVIDUAL MODULES
-        self.root_growth = RootGrowthModelCoupled(time_step, **scenario)
+        self.root_growth = RootGrowthModelCoupled(scenario["input_mtg"], time_step, **parameters)
         self.g = self.root_growth.g
-        self.root_anatomy = RootAnatomy(self.g, time_step, **scenario)
-        self.root_water = RootWaterModel(self.g, time_step/10, **scenario)
-        self.root_carbon = RootCarbonModelCoupled(self.g, time_step/4, **scenario)
-        self.root_nitrogen = RootNitrogenModelCoupled(self.g, time_step, **scenario)
-        self.soil = SoilModel(self.g, time_step, **scenario)
+        self.root_anatomy = RootAnatomy(self.g, time_step, **parameters)
+        self.root_water = RootWaterModel(self.g, time_step/10, **parameters)
+        self.root_carbon = RootCarbonModelCoupled(self.g, time_step/4, **parameters)
+        self.root_nitrogen = RootNitrogenModelCoupled(self.g, time_step/4, **parameters)
+        self.soil = SoilModel(self.g, time_step, **parameters)
         self.soil_voxels = self.soil.voxels
-
-        # Initialisation of Shoot modules
-        self.shoot = ShootModel(self.g)
 
         # EXPECTED !
         self.models = (self.root_growth, self.root_anatomy, self.root_water, self.root_carbon, self.root_nitrogen, self.soil)
@@ -70,11 +68,10 @@ class Model(CompositeModel):
         self.root_water.post_coupling_init()
 
     def run(self):
+        self.apply_input_tables(tables=self.input_tables, to=self.models, when=self.time)
+
         # Update environment boundary conditions
         self.soil()
-
-        # Compute shoot flows and state balance
-        self.shoot()
 
         # Compute root growth from resulting states
         self.root_growth()
@@ -93,4 +90,6 @@ class Model(CompositeModel):
         self.root_water()
         self.root_carbon()
         self.root_nitrogen()
+
+        self.time += 1
 
