@@ -45,7 +45,7 @@ class Model(CompositeModel):
         # DECLARE GLOBAL SIMULATION TIME STEP
         Choregrapher().add_simulation_time_step(time_step)
         self.time = 0
-        parameters = scenario["parameters"]
+        parameters = scenario["parameters"]["root_bridges"]
         self.input_tables = scenario["input_tables"]
 
         # INIT INDIVIDUAL MODULES
@@ -76,7 +76,7 @@ class Model(CompositeModel):
         # Compute root growth from resulting states
         self.root_growth()
         
-        # TODO
+        # Extend property dictionaries after growth
         self.root_anatomy.post_growth_updating()
         self.root_water.post_growth_updating()
         self.root_carbon.post_growth_updating()
