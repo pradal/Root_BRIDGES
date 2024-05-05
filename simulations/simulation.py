@@ -11,14 +11,14 @@ def single_run(scenario, outputs_dirpath="outputs"):
     logger = Logger(model_instance=root_bridges, outputs_dirpath=outputs_dirpath, 
                     time_step_in_hours=1,
                     logging_period_in_hours=50,
-                    recording_images=True, plotted_property="C_hexose_root", show_soil=True,
+                    recording_images=False, plotted_property="C_hexose_root", show_soil=True,
                     recording_mtg=True,
                     recording_raw=False,
                     recording_sums=True,
                     recording_performance=True,
                     echo=True)
     
-    for step in range(6001):
+    for step in range(501):
         # Placed here also to capture mtg initialization
         logger()
         root_bridges.run()
