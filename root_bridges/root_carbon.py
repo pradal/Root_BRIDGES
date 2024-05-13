@@ -35,6 +35,9 @@ class RootCarbonModelCoupled(RootCarbonModel):
     N_metabolic_respiration: float = declare(default=0., unit="mol.s-1", unit_comment="of carbon", description="Respiration related to nitrogen metabolism", 
                                             min_value="", max_value="", value_comment="", references="", DOI="",
                                              variable_type="state_variable", by="model_carbon", state_variable_type="extensive", edit_by="user")
+    total_hexose_diffusion_from_phloem: float = declare(default=0., unit="umol of C.g-1 mstruc.h-1", unit_comment="", description="Property computed to compare with shoot model unloading",
+                                    min_value="", max_value="", value_comment="", references="", DOI="",
+                                    variable_type="plant_scale_state", by="model_carbon", state_variable_type="", edit_by="user")
 
     # PARAMETERS
     r_hexose_AA: float = declare(default=4.5/6, unit="adim", unit_comment="mol of hexose per mol of amino acids in roots", description="stoechiometric ratio during amino acids synthesis for hexose consumption", 
@@ -98,4 +101,11 @@ class RootCarbonModelCoupled(RootCarbonModel):
                 - AA_synthesis * self.r_hexose_AA
                 + AA_catabolism / self.r_hexose_AA
                 - N_metabolic_respiration / 6.)
-                
+
+
+    @totalrate
+    def _total_hexose_diffusion_from_phloem(self, hexose_diffusion_from_phloem, struct_mass):
+        """
+        Property computed to compare with shoot model unloading (umol of C.g-1 mstruc.h-1)
+        """
+        return 6 * 3600 * 1e6 * (sum(list(hexose_diffusion_from_phloem.values())) / sum(list(struct_mass.values())))
