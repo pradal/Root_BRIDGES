@@ -1,8 +1,7 @@
 import root_bridges
 
 # Edited models
-from root_bridges.root_carbon import RootCarbonModelCoupled
-from root_bridges.root_nitrogen import RootNitrogenModelCoupled
+from root_bridges.root_CN import RootCNUnified
 from root_bridges.root_growth import RootGrowthModelCoupled
 from root_bridges.soil_model import SoilModel
 
@@ -50,13 +49,12 @@ class Model(CompositeModel):
         self.g = self.root_growth.g
         self.root_anatomy = RootAnatomy(self.g, time_step, **parameters)
         self.root_water = RootWaterModel(self.g, time_step/10, **parameters)
-        self.root_carbon = RootCarbonModelCoupled(self.g, time_step/4, **parameters)
-        self.root_nitrogen = RootNitrogenModelCoupled(self.g, time_step/4, **parameters)
+        self.root_cn = RootCNUnified(self.g, time_step/4, **parameters)
         self.soil = SoilModel(self.g, time_step, **parameters)
         self.soil_voxels = self.soil.voxels
 
         # EXPECTED !
-        self.models = (self.root_growth, self.root_anatomy, self.root_water, self.root_carbon, self.root_nitrogen, self.soil)
+        self.models = (self.root_growth, self.root_anatomy, self.root_water, self.root_cn, self.soil)
         self.data_structures = {"root": self.g, "soil": self.soil_voxels}
 
         # LINKING MODULES
@@ -76,8 +74,7 @@ class Model(CompositeModel):
         # Extend property dictionaries after growth
         self.root_anatomy.post_growth_updating()
         self.root_water.post_growth_updating()
-        self.root_carbon.post_growth_updating()
-        self.root_nitrogen.post_growth_updating()
+        self.root_cn.post_growth_updating()
         self.soil.post_growth_updating()
 
         # Update topological surfaces and volumes based on other evolved structural properties
@@ -85,8 +82,9 @@ class Model(CompositeModel):
 
         # Compute state variations for water and then carbon and nitrogen
         self.root_water()
-        self.root_carbon()
-        self.root_nitrogen()
+        self.root_cn()
+        #self.root_carbon()
+        #self.root_nitrogen()
 
         self.time += 1
 

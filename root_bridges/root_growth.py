@@ -7,6 +7,10 @@ from metafspm.component import declare
 from openalea.mtg.traversal import post_order
 from numpy import pi, sqrt
 
+
+family = "growth"
+
+
 @dataclass
 class RootGrowthModelCoupled(RootGrowthModel):
     """

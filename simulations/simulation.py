@@ -47,6 +47,7 @@ def simulate_scenarios():
     processes = []
     max_processes = mp.cpu_count()
     for scenario_name, scenario in scenarios.items():
+        
         while len(processes) == max_processes:
             for proc in processes:
                 if not proc.is_alive():

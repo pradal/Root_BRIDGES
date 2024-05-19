@@ -1,36 +1,23 @@
-from rhizodep.root_carbon import RootCarbonModel
-
 from dataclasses import dataclass
 from metafspm.component_factory import *
 from metafspm.component import declare
 
-@dataclass
-class RootCarbonModelCoupled(RootCarbonModel):
-    """
+from rhizodep.root_carbon import RootCarbonModel
+from root_cynaps.root_nitrogen import RootNitrogenModel
 
-    NOTE : double names in methods are forbiden as they will be overwritten in Choregrapher's resolution
-    However, it is a behavios of interest here when inheriting the class to edit it.
-    """
+
+family = "metabolic"
+
+
+@dataclass
+class RootCNUnified(RootCarbonModel, RootNitrogenModel):
+
     # INPUTS
-    import_Nm: float =  declare(default=0., unit="mol.s-1", unit_comment="of nitrates", description="", 
-                                min_value="", max_value="", value_comment="", references="", DOI="", 
-                                variable_type="input", by="model_nitrogen", state_variable_type="extensive", edit_by="user")
-    import_AA: float =  declare(default=0., unit="mol.s-1", unit_comment="of amino acids", description="", 
-                                min_value="", max_value="", value_comment="", references="", DOI="",
-                                variable_type="input", by="model_nitrogen", state_variable_type="extensive", edit_by="user")
-    export_Nm: float =  declare(default=0., unit="mol.s-1", unit_comment="of nitrates", description="", 
-                                min_value="", max_value="", value_comment="", references="", DOI="",
-                                variable_type="input", by="model_nitrogen", state_variable_type="extensive", edit_by="user")
-    export_AA: float =  declare(default=0., unit="mol.s-1", unit_comment="of amino acids", description="", 
-                                min_value="", max_value="", value_comment="", references="", DOI="",
-                                variable_type="input", by="model_nitrogen", state_variable_type="extensive", edit_by="user")
-    AA_synthesis: float = declare(default=0., unit="mol.s-1", unit_comment="of amino acids", description="", 
-                                min_value="", max_value="", value_comment="", references="", DOI="",
-                                variable_type="input", by="model_nitrogen", state_variable_type="extensive", edit_by="user")
-    AA_catabolism: float = declare(default=0., unit="mol.s-1", unit_comment="of amino acids", description="", 
-                                min_value="", max_value="", value_comment="", references="", DOI="",
-                                variable_type="input", by="model_nitrogen", state_variable_type="extensive", edit_by="user")
-    
+    # FROM GROWTH MODEL
+    amino_acids_consumption_by_growth: float = declare(default=0., unit="mol.s-1", unit_comment="", description="amino_acids consumption rate by growth processes", 
+                                                 min_value="", max_value="", value_comment="", references="", DOI="",
+                                                  variable_type="input", by="model_growth", state_variable_type="", edit_by="user")
+
     # STATE VARIABLES
     N_metabolic_respiration: float = declare(default=0., unit="mol.s-1", unit_comment="of carbon", description="Respiration related to nitrogen metabolism", 
                                             min_value="", max_value="", value_comment="", references="", DOI="",
@@ -54,11 +41,33 @@ class RootCarbonModelCoupled(RootCarbonModel):
                                 variable_type="parameter", by="model_carbon", state_variable_type="", edit_by="user")
 
     
-    def __init__(self, g, time_step, **scenario):
-        """Pass to inherited init, necessary with data classes"""
-        super().__init__(g, time_step, **scenario)
+    def __init__(self, g, time_step: int,  **scenario: dict):
+        """
+        DESCRIPTION
+        -----------
+        __init__ method
 
+        :param g: the root MTG
+        :param time_step: time step of the simulation (s)
+        :param scenario: mapping of existing variable initialization and parameters to superimpose.
+        :return:
+        """
+        self.g = g
+        self.props = self.g.properties()
+        self.time_step = time_step
+        self.choregrapher.add_time_and_data(instance=self, sub_time_step=self.time_step, data=self.props)
+        self.vertices = self.g.vertices(scale=self.g.max_scale())
 
+        # Before any other operation, we apply the provided scenario by changing default parameters and initialization
+        self.apply_scenario(**scenario)
+        self.link_self_to_mtg()
+
+        self.previous_C_amount_in_the_root_system = self.compute_root_system_C_content()
+
+    # Note, here the decorator naming doesn't make much sense, but it was placed so that resolution of this flux is made after every other one.
+    # Indeed, the expected behovior is to have rates computed from previous time step states. However, if we didn't waited for all import / export to compute,
+    # This respiration would have reflected states of two time-steps ago.
+    @actual
     @rate
     def _N_metabolic_respiration(self, import_Nm, export_Nm, import_AA, export_AA, AA_synthesis):
         """
@@ -69,6 +78,7 @@ class RootCarbonModelCoupled(RootCarbonModel):
         transport_respiration = self.respi_costs_mineralN_import * (import_Nm + export_Nm + import_AA + export_AA)
         anabolism_respiration = self.respi_costs_mineralN_reduction * AA_synthesis * self.r_Nm_AA
         return transport_respiration + anabolism_respiration
+
 
     @potential
     @state
@@ -84,8 +94,7 @@ class RootCarbonModelCoupled(RootCarbonModel):
         - Amino acid catabolism releasing hexose
         - Nitrogen metabolism related respiration costs
         """
-
-        return C_hexose_root + (self.time_step_in_seconds / (struct_mass + living_root_hairs_struct_mass)) * (
+        return C_hexose_root + (self.time_step / (struct_mass + living_root_hairs_struct_mass)) * (
                 - hexose_exudation
                 + hexose_uptake_from_soil
                 - mucilage_secretion
@@ -103,7 +112,29 @@ class RootCarbonModelCoupled(RootCarbonModel):
                 - N_metabolic_respiration / 6.)
 
 
-    @totalrate
+    @state
+    def _AA(self, AA, struct_mass, diffusion_AA_phloem, import_AA, diffusion_AA_soil, export_AA, AA_synthesis, 
+            storage_synthesis, storage_catabolism, AA_catabolism, struct_mass_produced, amino_acids_consumption_by_growth):
+        """
+        EDIT : replaced structural nitrogen synthesis by rhizodep input in balance
+        """
+
+        if struct_mass > 0:
+            return AA + (self.time_step / struct_mass) * (
+                    diffusion_AA_phloem
+                    + import_AA
+                    - diffusion_AA_soil
+                    - export_AA
+                    + AA_synthesis
+                    - storage_synthesis * self.r_AA_stor
+                    + storage_catabolism / self.r_AA_stor
+                    - AA_catabolism
+                    - amino_acids_consumption_by_growth
+            ) 
+        else:
+            return 0
+
+    #@totalrate
     def _total_hexose_diffusion_from_phloem(self, hexose_diffusion_from_phloem, struct_mass):
         """
         Property computed to compare with shoot model unloading (umol of C.g-1 mstruc.h-1)

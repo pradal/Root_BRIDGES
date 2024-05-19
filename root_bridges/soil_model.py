@@ -4,11 +4,16 @@ from dataclasses import dataclass
 from metafspm.component_factory import *
 from metafspm.component import declare
 
+
+family = "soil"
+
+
 @dataclass
 class SoilModel(RhizoInputsSoilModel):
     """
     Empty doc
     """
+
     # INPUTS
     # FROM NITROGEN MODEL
     mineralN_uptake: float = declare(default=0., unit="mol.s-1", unit_comment="of nitrates", description="", 
@@ -40,7 +45,7 @@ class SoilModel(RhizoInputsSoilModel):
         super().__init__(g, time_step, **scenario)
 
 
-    @state
+    #TP@state
     def _C_mineralN_soil(self, C_mineralN_soil, volume_soil,mineralN_diffusion_from_roots, mineralN_diffusion_from_xylem, mineralN_uptake):
         balance = C_mineralN_soil + (self.time_step_in_seconds / volume_soil) * (
             mineralN_diffusion_from_roots
@@ -50,7 +55,7 @@ class SoilModel(RhizoInputsSoilModel):
         balance[balance < 0.] = 0.
         return balance
 
-    @state
+    #TP@state
     def _C_amino_acids_soil(self, C_amino_acids_soil, volume_soil, amino_acids_diffusion_from_roots, amino_acids_diffusion_from_xylem, amino_acids_uptake):
         balance = C_amino_acids_soil + (self.time_step_in_seconds / volume_soil) * (
             amino_acids_diffusion_from_roots
