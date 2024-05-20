@@ -49,7 +49,7 @@ class Model(CompositeModel):
         self.g = self.root_growth.g
         self.root_anatomy = RootAnatomy(self.g, time_step, **parameters)
         self.root_water = RootWaterModel(self.g, time_step/10, **parameters)
-        self.root_cn = RootCNUnified(self.g, time_step/4, **parameters)
+        self.root_cn = RootCNUnified(self.g, time_step, **parameters)
         self.soil = SoilModel(self.g, time_step, **parameters)
         self.soil_voxels = self.soil.voxels
 
@@ -62,6 +62,7 @@ class Model(CompositeModel):
 
         self.root_water.post_coupling_init()
 
+
     def run(self):
         self.apply_input_tables(tables=self.input_tables, to=self.models, when=self.time)
 
@@ -70,7 +71,7 @@ class Model(CompositeModel):
 
         # Compute root growth from resulting states
         self.root_growth()
-        
+
         # Extend property dictionaries after growth
         self.root_anatomy.post_growth_updating()
         self.root_water.post_growth_updating()
@@ -83,8 +84,6 @@ class Model(CompositeModel):
         # Compute state variations for water and then carbon and nitrogen
         self.root_water()
         self.root_cn()
-        #self.root_carbon()
-        #self.root_nitrogen()
 
         self.time += 1
 

@@ -26,7 +26,7 @@ class RootGrowthModelCoupled(RootGrowthModel):
                                                     variable_type="state_variable", by="model_growth", state_variable_type="extensive", edit_by="user")
     
     # PARAMETERS
-    Km_elongation_amino_acids: float = declare(default=1.250 * 1e-6, unit="mol.g-1", unit_comment="of amino_acids", description="Affinity constant for root elongation regarding amino_acids consumption",
+    Km_elongation_amino_acids: float = declare(default=1250 * 1e-6, unit="mol.g-1", unit_comment="of amino_acids", description="Affinity constant for root elongation regarding amino_acids consumption",
                                                     min_value="", max_value="", value_comment="TODO : actualize", references="According to Barillot et al. (2016b): Km for root growth is 1250 umol C g-1 for sucrose. According to Gauthier et al (2020): Km for regulation of the RER by sucrose concentration in hz = 100-150 umol C g-1", DOI="",
                                                     variable_type="parameter", by="model_growth", state_variable_type="", edit_by="user")
     Km_nodule_thickening_amino_acids: float = declare(default=1250 * 1e-6 / 6. * 100, unit="mol.g-1", unit_comment="of amino_acids", description="Affinity constant for nodule thickening regarding amino_acids consumption", 
