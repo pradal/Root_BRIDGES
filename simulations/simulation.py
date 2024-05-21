@@ -9,19 +9,12 @@ from analyze.analyze import analyze_data
 from initialize.initialize import MakeScenarios as ms
 
 
-def single_run(scenario, outputs_dirpath="outputs", simulation_length=2500, echo=True):
+def single_run(scenario, outputs_dirpath="outputs", simulation_length=2500, echo=True, log_settings={}):
     root_bridges = Model(time_step=3600, **scenario)
     
     logger = Logger(model_instance=root_bridges, outputs_dirpath=outputs_dirpath, 
-                    time_step_in_hours=1,
-                    logging_period_in_hours=3,
-                    recording_images=True, recording_off_screen=True, plotted_property="import_Nm", show_soil=True,
-                    recording_mtg=False,
-                    recording_raw=False,
-                    recording_sums=True,
-                    recording_performance=True,
-                    recording_barcodes=False, compare_to_ref_barcode=False,
-                    echo=echo)
+                    time_step_in_hours=1, logging_period_in_hours=3,
+                    echo=echo, **log_settings)
     
     try:
         for _ in range(simulation_length):
@@ -35,15 +28,10 @@ def single_run(scenario, outputs_dirpath="outputs", simulation_length=2500, echo
 
     finally:
         logger.stop()
-        analyze_data(outputs_dirpath=outputs_dirpath,
-                     on_sums=True,
-                     on_performance=True,
-                     animate_raw_logs=False,
-                     target_properties=None
-                     )
+        analyze_data(outputs_dirpath=outputs_dirpath, target_properties=None, **log_settings)
 
 
-def simulate_scenarios(scenarios, simulation_length=2500, echo=True):
+def simulate_scenarios(scenarios, simulation_length=2500, echo=True, **log_settings):
     processes = []
     max_processes = mp.cpu_count()
     for scenario_name, scenario in scenarios.items():
@@ -58,16 +46,17 @@ def simulate_scenarios(scenarios, simulation_length=2500, echo=True):
         p = mp.Process(target=single_run, kwargs=dict(scenario=scenario, 
                                                       outputs_dirpath=os.path.join("outputs", str(scenario_name)),
                                                       simulation_length=simulation_length,
-                                                      echo=echo))
+                                                      echo=echo,
+                                                      log_settings=log_settings))
         p.start()
         processes.append(p)
 
 
 if __name__ == '__main__':
-    # scenarios = ms.from_table(file_path="inputs/Scenarios_24_05.xlsx", which=["Reference_Fischer"])
-    scenarios = ms.from_table(file_path="inputs/Scenarios_24_05.xlsx", which=["Drew_1975_1", "Drew_1975_low"])
+    #scenarios = ms.from_table(file_path="inputs/Scenarios_24_05.xlsx", which=["Reference_Fischer"])
+    scenarios = ms.from_table(file_path="inputs/Scenarios_24_05.xlsx", which=["Drew_1975_1", "Drew_1975_low", "Drew_1975_high"])
     # , "Drew_1975_1", "Drew_1975_low", "Drew_1975_high"
-    simulate_scenarios(scenarios, simulation_length=2500)
+    simulate_scenarios(scenarios, simulation_length=2000, **Logger.heavy_log)
 
     # In the end put the system to sleep, Windows only
     #os.system("rundll32.exe powrprof.dll,SetSuspendState 0,1,0")

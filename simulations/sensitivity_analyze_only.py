@@ -12,25 +12,13 @@ from initialize.initialize import MakeScenarios as ms
 from initialize.initialize import read_table
 import matplotlib.pyplot as plt
 from simulations.simulation import simulate_scenarios
-
-
-def sobol_analysis(problem, results_dirpath, scenarios_names, times=[], outputs=[]):
-    result_tables = [read_table(os.path.join(results_dirpath, name, "MTG_properties/MTG_properties_summed/plant_scale_properties.csv")) 
-                     for name in scenarios_names]
-    analyses = {}
-    for t in times:
-        results = {output: np.array([table[output][t] for table in result_tables], dtype=float) for output in outputs}
-        analyses[t] = {output: sobol.analyze(problem, results[output], calc_second_order=True) for output in outputs}
-
-    return analyses
+from simulations.sensitivity_analysis import sobol_analysis
 
 
 if __name__ == '__main__':
-    problem, scenarios_filename, scenarios_names = ms.from_factorial_plan("inputs/Factorial_plan_SA.xlsx", N=20)
-    scenarios = ms.from_table(scenarios_filename, which=scenarios_names)
-    simulate_scenarios(scenarios, simulation_length=150, echo=False, **Logger.light_log)
-    times=[48, 96, 142]
-    outputs=["total_struct_mass", "length", "C_hexose_root", "AA", "hexose_exudation", "import_Nm"]
+    problem, scenarios_filename, scenarios_names = ms.from_factorial_plan("inputs/Factorial_plan_SA.xlsx", save_scenarios=False, N=20)
+    times=[24, 48, 72 ,86, 99]
+    outputs=["total_struct_mass", "C_hexose_root"]
     analyses = sobol_analysis(problem=problem, results_dirpath="outputs", scenarios_names=scenarios_names, times=times, outputs=outputs)
     
     fig, axes = plt.subplots(len(outputs), len(times), figsize=(16, 6))
@@ -65,3 +53,4 @@ if __name__ == '__main__':
                 already_a_legend = True
 
     fig.savefig("outputs/SA.png", bbox_inches='tight')
+
