@@ -28,8 +28,8 @@ def sobol_analysis(problem, results_dirpath, scenarios_names, times=[], outputs=
 if __name__ == '__main__':
     problem, scenarios_filename, scenarios_names = ms.from_factorial_plan("inputs/Factorial_plan_SA.xlsx", N=20)
     scenarios = ms.from_table(scenarios_filename, which=scenarios_names)
-    simulate_scenarios(scenarios, simulation_length=150, echo=False, **Logger.light_log)
-    times=[48, 96, 142]
+    simulate_scenarios(scenarios, simulation_length=300, echo=False, log_settings=Logger.light_log)
+    times=[142, 284]
     outputs=["total_struct_mass", "length", "C_hexose_root", "AA", "hexose_exudation", "import_Nm"]
     analyses = sobol_analysis(problem=problem, results_dirpath="outputs", scenarios_names=scenarios_names, times=times, outputs=outputs)
     

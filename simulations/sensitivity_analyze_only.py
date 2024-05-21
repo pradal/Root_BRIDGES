@@ -17,8 +17,8 @@ from simulations.sensitivity_analysis import sobol_analysis
 
 if __name__ == '__main__':
     problem, scenarios_filename, scenarios_names = ms.from_factorial_plan("inputs/Factorial_plan_SA.xlsx", save_scenarios=False, N=20)
-    times=[24, 48, 72 ,86, 99]
-    outputs=["total_struct_mass", "C_hexose_root"]
+    times=[48, 96, 120, 142]
+    outputs=["total_struct_mass", "length", "C_hexose_root", "AA", "hexose_exudation", "import_Nm"]
     analyses = sobol_analysis(problem=problem, results_dirpath="outputs", scenarios_names=scenarios_names, times=times, outputs=outputs)
     
     fig, axes = plt.subplots(len(outputs), len(times), figsize=(16, 6))
@@ -45,7 +45,7 @@ if __name__ == '__main__':
                 #left_S2 += indices["S2"][k]
             
             if t == 0.:
-                ax.set_ylabel(outputs[o])
+                ax.set_ylabel(outputs[o], rotation=0, labelpad=30)
             if o == 0:
                 ax.set_title(f"t = {times[t]} h")
             if not already_a_legend:
