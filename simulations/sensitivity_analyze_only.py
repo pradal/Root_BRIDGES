@@ -17,7 +17,7 @@ from simulations.sensitivity_analysis import sobol_analysis
 
 if __name__ == '__main__':
     problem, scenarios_filename, scenarios_names = ms.from_factorial_plan("inputs/Factorial_plan_SA.xlsx", save_scenarios=False, N=20)
-    times=[48, 96, 120, 142]
+    times=[142, 284]
     outputs=["total_struct_mass", "length", "C_hexose_root", "AA", "hexose_exudation", "import_Nm"]
     analyses = sobol_analysis(problem=problem, results_dirpath="outputs", scenarios_names=scenarios_names, times=times, outputs=outputs)
     
@@ -37,9 +37,10 @@ if __name__ == '__main__':
             
             left_S1, left_ST, left_S2 = 0, 0, 0
             for k in range(len(problem["names"])):
+                #ax.barh("S2", indices["S2"][k], color=colors[k], left=left_S2)
                 ax.barh("S1", indices["S1"][k], color=colors[k], label=problem['names'][k], left=left_S1)
                 ax.barh("ST", indices["ST"][k], color=colors[k], left=left_ST)
-                #ax.barh("S2", indices["S2"][k], xerr=indices["S2_conf"][k], label=problem['names'][k], left=left_S2)
+
                 left_S1 += indices["S1"][k]
                 left_ST += indices["ST"][k]
                 #left_S2 += indices["S2"][k]

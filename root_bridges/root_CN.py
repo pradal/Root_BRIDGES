@@ -25,7 +25,10 @@ class RootCNUnified(RootCarbonModel, RootNitrogenModel):
     total_hexose_diffusion_from_phloem: float = declare(default=0., unit="umol of C.g-1 mstruc.h-1", unit_comment="", description="Property computed to compare with shoot model unloading",
                                     min_value="", max_value="", value_comment="", references="", DOI="",
                                     variable_type="plant_scale_state", by="model_carbon", state_variable_type="", edit_by="user")
-
+    deficit_AA_root: float = declare(default=0., unit="mol.s-1", unit_comment="of amino acids", description="Amino acids deficit rate in root", 
+                                        min_value="", max_value="", value_comment="", references="Hypothesis of no initial deficit", DOI="",
+                                         variable_type="state_variable", by="model_nitrogen", state_variable_type="extensive", edit_by="user")
+    
     # PARAMETERS
     r_hexose_AA: float = declare(default=4.5/6, unit="adim", unit_comment="mol of hexose per mol of amino acids in roots", description="stoechiometric ratio during amino acids synthesis for hexose consumption", 
                                 min_value="", max_value="", value_comment="", references="we hypothesize from Yemm and Willis 1956 that synthetized soluble amino acids are mainly composed of glutamine and asparagine", DOI="",
@@ -111,10 +114,10 @@ class RootCNUnified(RootCarbonModel, RootNitrogenModel):
                 + AA_catabolism / self.r_hexose_AA
                 - N_metabolic_respiration / 6.)
 
-
+    @potential
     @state
     def _AA(self, AA, struct_mass, diffusion_AA_phloem, import_AA, diffusion_AA_soil, export_AA, AA_synthesis, 
-            storage_synthesis, storage_catabolism, AA_catabolism, struct_mass_produced, amino_acids_consumption_by_growth):
+            storage_synthesis, storage_catabolism, AA_catabolism, struct_mass_produced, amino_acids_consumption_by_growth, deficit_AA_root):
         """
         EDIT : replaced structural nitrogen synthesis by rhizodep input in balance
         """
@@ -130,9 +133,25 @@ class RootCNUnified(RootCarbonModel, RootNitrogenModel):
                     + storage_catabolism / self.r_AA_stor
                     - AA_catabolism
                     - amino_acids_consumption_by_growth
+                    - deficit_AA_root
             ) 
         else:
             return 0
+
+    @deficit
+    @state
+    def _deficit_AA_root(self, AA, struct_mass, living_root_hairs_struct_mass):
+        if AA < 0:
+            return - AA * (struct_mass + living_root_hairs_struct_mass) / self.time_step
+        else:
+            return 0.
+        
+    @actual
+    @state
+    def _threshold_C_sucrose_root(self):
+        for vid in self.props["focus_elements"]:
+            if self.AA[vid] < 0.:
+                self.AA[vid] = 0.
 
     #@totalrate
     def _total_hexose_diffusion_from_phloem(self, hexose_diffusion_from_phloem, struct_mass):

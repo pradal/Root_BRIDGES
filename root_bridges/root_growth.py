@@ -26,20 +26,23 @@ class RootGrowthModelCoupled(RootGrowthModel):
                                                     variable_type="state_variable", by="model_growth", state_variable_type="extensive", edit_by="user")
     
     # PARAMETERS
-    Km_elongation_amino_acids: float = declare(default=1250 * 1e-6, unit="mol.g-1", unit_comment="of amino_acids", description="Affinity constant for root elongation regarding amino_acids consumption",
+    Km_elongation_amino_acids: float = declare(default=1250 * 1e-6 / 5, unit="mol.g-1", unit_comment="of amino_acids", description="Affinity constant for root elongation regarding amino_acids consumption",
                                                     min_value="", max_value="", value_comment="TODO : actualize", references="According to Barillot et al. (2016b): Km for root growth is 1250 umol C g-1 for sucrose. According to Gauthier et al (2020): Km for regulation of the RER by sucrose concentration in hz = 100-150 umol C g-1", DOI="",
                                                     variable_type="parameter", by="model_growth", state_variable_type="", edit_by="user")
-    Km_nodule_thickening_amino_acids: float = declare(default=1250 * 1e-6 / 6. * 100, unit="mol.g-1", unit_comment="of amino_acids", description="Affinity constant for nodule thickening regarding amino_acids consumption", 
+    Km_nodule_thickening_amino_acids: float = declare(default=1250 * 1e-6 / 5. * 100, unit="mol.g-1", unit_comment="of amino_acids", description="Affinity constant for nodule thickening regarding amino_acids consumption", 
                                                     min_value="", max_value="", value_comment="Km_elongation * 100, TODO : actualize", references="", DOI="",
                                                     variable_type="parameter", by="model_growth", state_variable_type="", edit_by="user")
-    struct_mass_N_content: float = declare(default=0.01 / 12.01, unit="mol.g-1", unit_comment="of organic nitrogen", description="organic nitrogen content of structural mass",
-                                                    min_value="", max_value="", value_comment="TODO : actualize", references="We assume that the structural mass contains 10% of C. (??)", DOI="",
+    struct_mass_N_content: float = declare(default=0.03 / 14, unit="mol.g-1", unit_comment="of organic nitrogen", description="organic nitrogen content of structural mass",
+                                                    min_value="", max_value="", value_comment="Increased from 3% to consider active protein requirements in structural mass", references="We assume that the structural mass contains 3% of N. (??)", DOI="",
                                                     variable_type="parameter", by="model_growth", state_variable_type="", edit_by="user")
     yield_growth_N: float = declare(default=1., unit="adim", unit_comment="mol of N per mol of C used for structural mass", description="Growth yield of amino acids", 
                                                     min_value="", max_value="", value_comment="No deamination considered during biosynthesis, so we stick to 1.", references="", DOI="",
                                                     variable_type="parameter", by="model_growth", state_variable_type="", edit_by="user")
     r_Nm_AA: float =     declare(default=1.4, unit="adim", unit_comment="mol of nitrogen per mol of amino acids", description="concentration stoechiometric ratio between mineral nitrogen and amino acids in roots", 
                                 min_value="", max_value="", value_comment="TODO : check estimation", references="", DOI="",
+                                variable_type="parameter", by="model_growth", state_variable_type="", edit_by="user")
+    r_C_AA: float =     declare(default=5, unit="adim", unit_comment="mol of carbon per mol of amino acids", description="concentration stoechiometric ratio between carbon and amino acids in roots", 
+                                min_value="", max_value="", value_comment="Based on glutamic acid", references="", DOI="",
                                 variable_type="parameter", by="model_growth", state_variable_type="", edit_by="user")
 
 
@@ -118,10 +121,12 @@ class RootGrowthModelCoupled(RootGrowthModel):
             # based on a Michaelis-Menten formalism:
             if C_hexose_root > 0. and element.AA > 0:
                 # michaelis_menten_limitation = ((1 + self.Km_elongation) / C_hexose_root) * ((1 + self.Km_elongation_amino_acids) / element.AA)
-                michaelis_menten_limitation = min((C_hexose_root / (C_hexose_root + self.Km_elongation)), (element.AA / (element.AA + self.Km_elongation_amino_acids)))
+                michaelis_menten_limitation = ((C_hexose_root / (C_hexose_root + self.Km_elongation)) + (element.AA / (element.AA + self.Km_elongation_amino_acids))) / 2
+                #print("MM", michaelis_menten_limitation)
                 potential_elongation = self.EL * 2. * radius * elongation_time_in_seconds
                 elongation = potential_elongation * michaelis_menten_limitation
             else:
+                print("No elongation, negative concentrations!! ", C_hexose_root, element.AA)
                 elongation = 0.
         
         # We calculate the new potential length corresponding to this elongation:
@@ -413,8 +418,7 @@ class RootGrowthModelCoupled(RootGrowthModel):
                 # based on a Michaelis-Menten formalism that regulates the maximal rate of increase
                 # according to the amount of hexose available:
                 thickening_rate = self.relative_root_thickening_rate_max / (
-                    ((1+self.Km_nodule_thickening) / segment.C_hexose_root)*((1+self.Km_nodule_thickening_amino_acids) / segment.AA)
-                )
+                    ((1+self.Km_nodule_thickening) / segment.C_hexose_root) + ((1+self.Km_nodule_thickening_amino_acids) / segment.AA)) / 2
 
                 # We calculate a coefficient that will modify the rate of thickening according to soil temperature
                 # assuming a linear relationship (this is equivalent as the calculation of "growth degree-days):
@@ -550,7 +554,9 @@ class RootGrowthModelCoupled(RootGrowthModel):
                 continue
 
             n.amino_acids_growth_demand = (potential_volume - initial_volume) \
-                                     * n.root_tissue_density * self.struct_mass_N_content / self.yield_growth_N / self.r_Nm_AA
+                                     * n.root_tissue_density * max(self.struct_mass_N_content / self.yield_growth_N / self.r_Nm_AA,
+                                                                # We also increase the demand as amino acids also bring C!
+                                                                self.struct_mass_C_content / self.yield_growth / self.r_C_AA)
             # We verify that this potential growth demand is positive:
             if n.amino_acids_growth_demand < 0.:
                 print("!!! ERROR: a negative growth demand for amino acids of", n.amino_acids_growth_demand,
@@ -606,8 +612,11 @@ class RootGrowthModelCoupled(RootGrowthModel):
             # ---------------------------------------
 
             # We calculate the maximal possible length of the root element according to all the hexose available for elongation:
-            volume_max_C = initial_volume + hexose_possibly_required_for_elongation * 6. \
+            prossible_volume_increase_C_hexose = hexose_possibly_required_for_elongation * 6. \
                          / (n.root_tissue_density * self.struct_mass_C_content) * self.yield_growth
+            prossible_volume_increase_C_AA = amino_acids_possibly_required_for_elongation * self.r_C_AA \
+                         / (n.root_tissue_density * self.struct_mass_C_content) * self.yield_growth
+            volume_max_C = initial_volume + prossible_volume_increase_C_hexose + prossible_volume_increase_C_AA
             volume_max_N = initial_volume + amino_acids_possibly_required_for_elongation * self.r_Nm_AA \
                          / (n.root_tissue_density * self.struct_mass_N_content) * self.yield_growth_N
             # We account for the minimal volume defining the most limiting factor between C and N
@@ -626,13 +635,14 @@ class RootGrowthModelCoupled(RootGrowthModel):
                     n.length = n.potential_length
                 # The corresponding new volume is calculated:
                 volume_after_elongation = self.volume_from_radius_and_length(n, n.initial_radius, n.length)
+
                 # The overall cost of elongation is calculated as:
-                hexose_consumption_by_elongation = \
-                    1. / 6. * (volume_after_elongation - initial_volume) \
-                    * n.root_tissue_density * self.struct_mass_C_content / self.yield_growth
-                amino_acids_consumption_by_elongation = \
-                    1. / self.r_Nm_AA * (volume_after_elongation - initial_volume) \
+                amino_acids_consumption_by_elongation = (1. / self.r_Nm_AA) * (volume_after_elongation - initial_volume) \
                     * n.root_tissue_density * self.struct_mass_N_content / self.yield_growth_N
+
+                # Here we substract the amount of C brought by amino acids to the amount of consummed hexose
+                hexose_consumption_by_elongation = (1. / 6. * (volume_after_elongation - initial_volume) \
+                    * n.root_tissue_density * self.struct_mass_C_content / self.yield_growth) - amino_acids_consumption_by_elongation * self.r_C_AA / 6
 
                 # If there has been an actual elongation:
                 if n.length > n.initial_length:
@@ -665,9 +675,13 @@ class RootGrowthModelCoupled(RootGrowthModel):
             if n.potential_radius > n.initial_radius:
                 # CALCULATING ACTUAL THICKENING:
                 # We calculate the increase in volume that can be achieved with the amount of hexose available:
-                possible_radial_increase_in_volume_C = \
+                possible_radial_increase_in_volume_C_hexose = \
                     remaining_hexose_for_thickening * 6. * self.yield_growth \
                     / (n.root_tissue_density * self.struct_mass_C_content)
+                possible_radial_increase_in_volume_C_AA = \
+                    remaining_amino_acids_for_thickening * self.r_C_AA * self.yield_growth \
+                    / (n.root_tissue_density * self.struct_mass_C_content)
+                possible_radial_increase_in_volume_C = possible_radial_increase_in_volume_C_hexose + possible_radial_increase_in_volume_C_AA
                 possible_radial_increase_in_volume_N = \
                     remaining_amino_acids_for_thickening * self.r_Nm_AA * self.yield_growth_N \
                     / (n.root_tissue_density * self.struct_mass_N_content)
@@ -703,12 +717,15 @@ class RootGrowthModelCoupled(RootGrowthModel):
                         - self.volume_from_radius_and_length(n, n.initial_radius, n.length)
                     # net_increase_in_volume = pi * (n.radius ** 2 - n.initial_radius ** 2) * n.length
                     # We then calculate the remaining amount of hexose after thickening:
-                    hexose_actual_contribution_to_thickening = \
-                        1. / 6. * net_increase_in_volume \
-                        * n.root_tissue_density * self.struct_mass_C_content / self.yield_growth
+
                     amino_acids_actual_contribution_to_thickening = \
                         1. / self.r_Nm_AA * net_increase_in_volume \
                         * n.root_tissue_density * self.struct_mass_N_content / self.yield_growth_N
+
+                    hexose_actual_contribution_to_thickening = \
+                        1. / 6. * net_increase_in_volume \
+                        * n.root_tissue_density * self.struct_mass_C_content / self.yield_growth - amino_acids_actual_contribution_to_thickening * self.r_C_AA / 6
+                    
 
                 # REGISTERING THE COSTS FOR THICKENING:
                 # --------------------------------------
@@ -961,7 +978,7 @@ class RootGrowthModelCoupled(RootGrowthModel):
                 # The new potential root hairs length is calculated according to the elongation rate,
                 # corrected by temperature and modulated by the concentration of hexose (in the same way as for root
                 # elongation) available in the root hair zone on the root element:
-                cn_limitation = min((n.C_hexose_root / (n.C_hexose_root + self.Km_elongation)), (n.AA / (n.AA + self.Km_elongation_amino_acids)))
+                cn_limitation = ((n.C_hexose_root / (n.C_hexose_root + self.Km_elongation)) + (n.AA / (n.AA + self.Km_elongation_amino_acids))) / 2
                 new_length = n.root_hair_length + self.root_hairs_elongation_rate * self.root_hair_radius * (n.actual_length_with_hairs / n.length) * cn_limitation
                 
                 # If the new calculated length is higher than the maximal length:
@@ -1110,6 +1127,7 @@ class RootGrowthModelCoupled(RootGrowthModel):
                                                  amino_acids_possibly_required_for_elongation=0.,
                                                  amino_acids_growth_demand=0.
                                                  )
+            
             return new_child
 
         # Otherwise, if identical_properties=True, then we copy most of the properties of the mother element in the new element:
@@ -1198,4 +1216,5 @@ class RootGrowthModelCoupled(RootGrowthModel):
                                                  amino_acids_possibly_required_for_elongation=0.,
                                                  amino_acids_growth_demand=0.
                                                  )
+            
             return new_child
