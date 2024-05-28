@@ -20,6 +20,10 @@ class RootGrowthModelCoupled(RootGrowthModel):
     """
     # INPUTS
     
+    nitrate_transporters_affinity_factor: float = declare(default=1., unit="mol.s-1", unit_comment="of nitrates", description="nitrate_transporters_affinity_factor, introduced to account for NRT1 signalling function when going through LATS regime", 
+                                                    min_value="", max_value="", value_comment="", references="Remans et al 2006", DOI="", 
+                                                    variable_type="input", by="model_nitrogen", state_variable_type="intensive", edit_by="user")
+
     # STATE VARIABLES
     amino_acids_consumption_by_growth: float = declare(default=0., unit="mol.s-1", unit_comment="", description="amino_acids consumption rate by growth processes", 
                                                     min_value="", max_value="", value_comment="", references="", DOI="",
@@ -123,7 +127,7 @@ class RootGrowthModelCoupled(RootGrowthModel):
                 # michaelis_menten_limitation = ((1 + self.Km_elongation) / C_hexose_root) * ((1 + self.Km_elongation_amino_acids) / element.AA)
                 michaelis_menten_limitation = ((C_hexose_root / (C_hexose_root + self.Km_elongation)) + (element.AA / (element.AA + self.Km_elongation_amino_acids))) / 2
                 #print("MM", michaelis_menten_limitation)
-                potential_elongation = self.EL * 2. * radius * elongation_time_in_seconds
+                potential_elongation = self.EL * (0.5 + 2 * element.nitrate_transporters_affinity_factor) * 2. * radius * elongation_time_in_seconds
                 elongation = potential_elongation * michaelis_menten_limitation
             else:
                 print("No elongation, negative concentrations!! ", C_hexose_root, element.AA)

@@ -82,7 +82,9 @@ RootGrowthModelCoupled:
   RootAnatomy:
     root_tissue_density:
       root_tissue_density: 1.0
-  RootCNUnified: {}
+  RootCNUnified:
+    nitrate_transporters_affinity_factor:
+      nitrate_transporters_affinity_factor: 1.0
   RootGrowthModelCoupled: {}
   RootWaterModel: {}
   SoilModel:

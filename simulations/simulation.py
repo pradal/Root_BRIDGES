@@ -13,7 +13,7 @@ def single_run(scenario, outputs_dirpath="outputs", simulation_length=2500, echo
     root_bridges = Model(time_step=3600, **scenario)
     
     logger = Logger(model_instance=root_bridges, outputs_dirpath=outputs_dirpath, 
-                    time_step_in_hours=1, logging_period_in_hours=3,
+                    time_step_in_hours=1, logging_period_in_hours=24,
                     echo=echo, **log_settings)
     
     try:
@@ -28,7 +28,7 @@ def single_run(scenario, outputs_dirpath="outputs", simulation_length=2500, echo
 
     finally:
         logger.stop()
-        analyze_data(scenarios=[os.path.basename(outputs_dirpath)], outputs_dirpath=outputs_dirpath, target_properties=None, **log_settings)
+        #analyze_data(scenarios=[os.path.basename(outputs_dirpath)], outputs_dirpath=outputs_dirpath, target_properties=None, **log_settings)
     
 
 def simulate_scenarios(scenarios, simulation_length=2500, echo=True, log_settings={}):
@@ -53,12 +53,12 @@ def simulate_scenarios(scenarios, simulation_length=2500, echo=True, log_setting
 
 
 if __name__ == '__main__':
-    scenarios = ms.from_table(file_path="inputs/Scenarios_24_05.xlsx", which=["Reference_Fischer"])
-    #scenarios = ms.from_table(file_path="inputs/Scenarios_24_05.xlsx", which=["Drew_1975_1"])
-    #scenarios = ms.from_table(file_path="inputs/Scenarios_24_05.xlsx", which=["Drew_1975_low"])
-    #scenarios = ms.from_table(file_path="inputs/Scenarios_24_05.xlsx", which=["Drew_1975_1", "Drew_1975_low", "Drew_1975_high"])
+    #scenarios = ms.from_table(file_path="inputs/Scenarios_24_05.xlsx", which=["Reference_Fischer"])
+    #scenarios = ms.from_table(file_path="inputs/Scenarios_24_05.xlsx", which=["Drew_1975_1", "Drew_1975_low"])
+    #scenarios = ms.from_table(file_path="inputs/Scenarios_24_05.xlsx", which=["Drew_1975_high"])
+    scenarios = ms.from_table(file_path="inputs/Scenarios_24_05.xlsx", which=["Drew_1975_1", "Drew_1975_low", "Drew_1975_high"])
     # , "Drew_1975_1", "Drew_1975_low", "Drew_1975_high"
-    simulate_scenarios(scenarios, simulation_length=2000, log_settings=Logger.medium_log_focus_properties)
+    simulate_scenarios(scenarios, simulation_length=2500, log_settings=Logger.heavy_log)
 
     # In the end put the system to sleep, Windows only
     #os.system("rundll32.exe powrprof.dll,SetSuspendState 0,1,0")
