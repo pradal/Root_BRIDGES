@@ -26,3 +26,5 @@ openpyxl
 #cudatoolkit
 #tensorflow
 statsmodels
+guhdi
+SALib

@@ -6,6 +6,7 @@ from metafspm.component import declare
 
 from openalea.mtg.traversal import post_order
 from numpy import pi, sqrt
+import numpy as np
 
 
 family = "growth"
@@ -257,25 +258,17 @@ class RootGrowthModelCoupled(RootGrowthModel):
         n.list_of_elongation_supporting_elements_mass = list_of_elongation_supporting_elements_mass
 
 
-    # Function calculating the potential development of an apex:
-    def potential_apex_development(self, apex):
+    def primordium_formation(self, apex, elongation_rate=0.):
         """
-        This function considers a root apex, i.e. the terminal root element of a root axis (including the primordium of a
-        root that has not emerged yet), and calculates its potential elongation, without actually elongating the apex or
-        forming any new root primordium in the standard case (only when ArchiSimple option is set to True). Aging of the
-        apex is also considered.
-        :param apex: the apex to be considered
-        :return: the updated apex
+        This function considers the formation of a primordium on a root apex, and, if possible, creates this new element
+        of length 0.
+        :param apex: the apex on which the primordium may be created
+        :param elongation_rate: the rate of elongation of the apex over the time step during which the primordium may be created (m s-1)
+        :return: the new primordium
         """
 
-        # We initialize an empty list in which the modified apex will be added:
-        new_apex = []
-        # We record the current radius and length prior to growth as the initial radius and length:
-        apex.initial_radius = apex.radius
-        apex.initial_length = apex.length
-        # We initialize the properties "potential_radius" and "potential_length" returned by the function:
-        apex.potential_radius = apex.radius
-        apex.potential_length = apex.length
+        # NOTE: This function has to be called AFTER the actual elongation of the apex has been done and the distance
+        # between the tip of the apex and the last ramification (dist_to_ramif) has been increased!
 
         # CALCULATING AN EQUIVALENT OF THERMAL TIME:
         # -------------------------------------------
@@ -286,215 +279,106 @@ class RootGrowthModelCoupled(RootGrowthModel):
                                                                     soil_temperature=apex.soil_temperature,
                                                                     T_ref=self.T_ref, A=self.A, B=self.B, C=self.C)
 
-        # CASE 1: THE APEX CORRESPONDS TO THE PRIMORDIUM OF A POTENTIALLY EMERGING SEMINAL OR ADVENTITIOUS ROOT
-        # -----------------------------------------------------------------------------------------------------
-        # If the seminal root has not emerged yet:
-        if apex.type == "Seminal_root_before_emergence" or apex.type == "Adventitious_root_before_emergence":
-            # If the time elapsed since the last emergence of seminal root is higher than the prescribed interval time:
-            if ( apex.thermal_time_since_primordium_formation + self.time_step_in_seconds * temperature_time_adjustment) >= apex.emergence_delay_in_thermal_time:
-                # The potential time elapsed since seminal root's possible emergence is calculated:
-                apex.thermal_potential_time_since_emergence = apex.thermal_time_since_primordium_formation + self.time_step_in_seconds * temperature_time_adjustment \
-                                                              - apex.emergence_delay_in_thermal_time
-                # If the apex could have emerged sooner:
-                if apex.thermal_potential_time_since_emergence > self.time_step_in_seconds * temperature_time_adjustment:
-                    # The time since emergence is reduced to the time elapsed during this time step:
-                    apex.thermal_potential_time_since_emergence = self.time_step_in_seconds * temperature_time_adjustment
+        # OPERATING PRIMORDIUM FORMATION:
+        # --------------------------------
+        # We initialize the new_apex that will be returned by the function:
+        new_apex = []
 
-                # We record the different elements that can contribute to the C supply necessary for growth,
-                # and we calculate a mean concentration of hexose in this supplying zone:
-                self.calculating_supply_for_elongation(element=apex)
-                # The corresponding potential elongation of the apex is calculated:
-                apex.potential_length = self.elongated_length(element=apex, initial_length=apex.initial_length,
-                                                              radius=apex.initial_radius,
-                                                              C_hexose_root=apex.growing_zone_C_hexose_root,
-                                                              elongation_time_in_seconds=apex.thermal_potential_time_since_emergence)
-                # Last, if ArchiSimple has been chosen as the growth model:
-                if self.ArchiSimple:
-                    # Then we automatically allow the root to emerge, without consideration of C limitation:
-                    apex.type = "Normal_root_after_emergence"
-            # In any case, the time since primordium formation is incremented, as usual:
-            apex.actual_time_since_primordium_formation += self.time_step_in_seconds
-            apex.thermal_time_since_primordium_formation += self.time_step_in_seconds * temperature_time_adjustment
-            # And the new element returned by the function corresponds to the potentially emerging apex:
+        # VERIFICATION: We make sure that no lateral root has already been form on the present apex.
+        # We calculate the number of children of the apex (it should be 0!):
+        n_children = len(apex.children())
+        # If there is at least one children, it means that there is already one lateral primordium or root on the apex:
+        if n_children >= 1:
+            # Then we don't add any primordium and simply return the unaltered apex:
             new_apex.append(apex)
-            # And the function returns this new apex and stops here:
             return new_apex
 
-        # CASE 2: THE APEX CORRESPONDS TO THE PRIMORDIUM OF A POTENTIALLY EMERGING NORMAL LATERAL ROOT
-        # ---------------------------------------------------------------------------------------------
-        if apex.type == "Normal_root_before_emergence":
-            # If the time since primordium formation is higher than the delay of emergence:
-            if apex.thermal_time_since_primordium_formation + self.time_step_in_seconds * temperature_time_adjustment > self.emergence_delay:
-                # The time since primordium formation is incremented:
-                apex.actual_time_since_primordium_formation += self.time_step_in_seconds
-                apex.thermal_time_since_primordium_formation += self.time_step_in_seconds * temperature_time_adjustment
-                # The potential time elapsed at the end of this time step since the emergence is calculated:
-                apex.thermal_potential_time_since_emergence = apex.thermal_time_since_primordium_formation - self.emergence_delay
-                # If the apex could have emerged sooner:
-                if apex.thermal_potential_time_since_emergence > self.time_step_in_seconds * temperature_time_adjustment:
-                    # The time since emergence is equal to the time elapsed during this time step (since it must have emerged at this time step):
-                    apex.thermal_potential_time_since_emergence = self.time_step_in_seconds * temperature_time_adjustment
-                # We record the different element that can contribute to the C supply necessary for growth,
-                # and we calculate a mean concentration of hexose in this supplying zone:
-                self.calculating_supply_for_elongation(element=apex)
-                # The corresponding elongation of the apex is calculated:
-                apex.potential_length = self.elongated_length(element=apex, initial_length=apex.initial_length,
-                                                              radius=apex.initial_radius,
-                                                              C_hexose_root=apex.growing_zone_C_hexose_root,
-                                                              elongation_time_in_seconds=apex.thermal_potential_time_since_emergence)
+        # If the order of the current apex is too high, we forbid the formation of a new primordium of higher order:
+        if self.root_order_limitation and apex.root_order + 1 > self.root_order_treshold:
+            # Then we don't add any primordium and simply return the unaltered apex:
+            new_apex.append(apex)
+            return new_apex
 
-                # If ArchiSimple has been chosen as the growth model:
-                if self.ArchiSimple:
-                    apex.type = "Normal_root_after_emergence"
-                    new_apex.append(apex)
-                    # And the function returns this new apex and stops here:
-                    return new_apex
-                # Otherwise, we control the actual emergence of this primordium through the management of the parent:
-                else:
-                    # We select the parent on which the primordium has been formed:
-                    vid = apex.index()
-                    index_parent = self.g.Father(vid, EdgeType='+')
-                    parent = self.g.node(index_parent)
-                    # The possibility of emergence of a lateral root from the parent is recorded inside the parent:
-                    parent.lateral_root_emergence_possibility = "Possible"
-                    parent.lateral_primordium_index = apex.index()
-                    # And the new element returned by the function corresponds to the potentially emerging apex:
-                    new_apex.append(apex)
-                    # And the function returns this new apex and stops here:
-                    return new_apex
-            # Otherwise, the time since primordium formation is simply incremented:
+        # We first calculate the radius that the primordium may have. This radius is drawn from a normal distribution
+        # whose mean is the value of the mother root diameter multiplied by RMD, and whose standard deviation is
+        # the product of this mean and the coefficient of variation CVDD (Pages et al. 2014).
+        # We also set the root angles depending on random:
+        if self.random:
+            # The seed used to generate random values is defined according to a parameter random_choice and the index of the apex:
+            np.random.seed(self.random_choice * apex.index())
+            potential_radius = np.random.normal((apex.radius - self.Dmin / 2.) * self.RMD + self.Dmin / 2.,
+                                                ((apex.radius - self.Dmin / 2.) * self.RMD + self.Dmin / 2.) * self.CVDD)
+            apex_angle_roll = abs(np.random.normal(120, 10))
+            if apex.root_order == 1:
+                primordium_angle_down = abs(np.random.normal(45, 10))
             else:
-                apex.actual_time_since_primordium_formation += self.time_step_in_seconds
-                apex.thermal_time_since_primordium_formation += self.time_step_in_seconds * temperature_time_adjustment
-                # And the new element returned by the function corresponds to the modified apex:
-                new_apex.append(apex)
-                # And the function returns this new apex and stops here:
-                return new_apex
-
-        # CASE 3: THE APEX BELONGS TO AN AXIS THAT HAS ALREADY EMERGED:
-        # --------------------------------------------------------------
-        apex_growth_duration = apex.growth_duration + apex.nitrate_transporters_affinity_factor * self.main_roots_growth_extender
-        
-        # IF THE APEX CAN CONTINUE GROWING:
-        if apex.thermal_time_since_emergence + self.time_step_in_seconds * temperature_time_adjustment < apex_growth_duration:
-            # The times are incremented:
-            apex.actual_time_since_primordium_formation += self.time_step_in_seconds
-            apex.thermal_time_since_primordium_formation += self.time_step_in_seconds * temperature_time_adjustment
-            apex.actual_time_since_emergence += self.time_step_in_seconds
-            apex.thermal_time_since_emergence += self.time_step_in_seconds * temperature_time_adjustment
-            # We record the different element that can contribute to the C supply necessary for growth,
-            # and we calculate a mean concentration of hexose in this supplying zone:
-            self.calculating_supply_for_elongation(element=apex)
-            # The corresponding potential elongation of the apex is calculated:
-            apex.potential_length = self.elongated_length(element=apex, initial_length=apex.length, radius=apex.radius,
-                                                          C_hexose_root=apex.growing_zone_C_hexose_root,
-                                                          elongation_time_in_seconds=self.time_step_in_seconds * temperature_time_adjustment)
-            # And the new element returned by the function corresponds to the modified apex:
-            new_apex.append(apex)
-            # And the function returns this new apex and stops here:
-            return new_apex
-
-        # OTHERWISE, THE APEX HAD TO STOP:
+                primordium_angle_down = abs(np.random.normal(70, 10))
+            primordium_angle_roll = abs(np.random.normal(5, 5))
         else:
-            # IF THE APEX HAS NOT REACHED ITS LIFE DURATION:
-            if apex.thermal_time_since_growth_stopped + self.time_step_in_seconds * temperature_time_adjustment < apex.life_duration:
-                # IF THE APEX HAS ALREADY BEEN STOPPED AT A PREVIOUS TIME STEP:
-                if apex.type == "Stopped" or apex.type == "Just_stopped":
-                    # The time since growth stopped is simply increased by one time step:
-                    apex.actual_time_since_growth_stopped += self.time_step_in_seconds
-                    apex.thermal_time_since_growth_stopped += self.time_step_in_seconds * temperature_time_adjustment
-                    # The type is (re)declared "Stopped":
-                    apex.type = "Stopped"
-                    # The times are incremented:
-                    apex.actual_time_since_primordium_formation += self.time_step_in_seconds
-                    apex.thermal_time_since_primordium_formation += self.time_step_in_seconds * temperature_time_adjustment
-                    apex.actual_time_since_emergence += self.time_step_in_seconds
-                    apex.thermal_time_since_emergence += self.time_step_in_seconds * temperature_time_adjustment
-                    apex.actual_time_since_cells_formation += self.time_step_in_seconds
-                    apex.thermal_time_since_cells_formation += self.time_step_in_seconds * temperature_time_adjustment
-                    # The new element returned by the function corresponds to this apex:
-                    new_apex.append(apex)
-                    # And the function returns this new apex and stops here:
-                    return new_apex
-
-                # OTHERWISE, THE APEX HAS TO STOP DURING THIS TIME STEP:
-                else:
-                    # The type is declared "Just stopped":
-                    apex.type = "Just_stopped"
-                    # Then the exact time since growth stopped is calculated:
-                    apex.thermal_time_since_growth_stopped = apex.thermal_time_since_emergence \
-                                                             + self.time_step_in_seconds * temperature_time_adjustment \
-                                                             - apex.growth_duration
-                    apex.actual_time_since_growth_stopped = apex.thermal_time_since_growth_stopped / temperature_time_adjustment
-
-                    # We record the different element that can contribute to the C supply necessary for growth,
-                    # and we calculate a mean concentration of hexose in this supplying zone:
-                    self.calculating_supply_for_elongation(element=apex)
-                    # And the potential elongation of the apex before growth stopped is calculated:
-                    apex.potential_length = self.elongated_length(element=apex, initial_length=apex.length, radius=apex.radius,
-                                                                  C_hexose_root=apex.growing_zone_C_hexose_root,
-                                                                  elongation_time_in_seconds=self.time_step_in_seconds * temperature_time_adjustment - apex.thermal_time_since_growth_stopped)
-                    # VERIFICATION:
-                    if self.time_step_in_seconds * temperature_time_adjustment - apex.thermal_time_since_growth_stopped < 0.:
-                        print("!!! ERROR: The apex", apex.index(), "has stopped since",
-                              apex.actual_time_since_growth_stopped,
-                              "seconds; the time step is", self.time_step_in_seconds)
-                        print("We set the potential length of this apex equal to its initial length.")
-                        apex.potential_length = apex.initial_length
-
-                    # The times are incremented:
-                    apex.actual_time_since_primordium_formation += self.time_step_in_seconds
-                    apex.actual_time_since_emergence += self.time_step_in_seconds
-                    apex.thermal_time_since_primordium_formation += self.time_step_in_seconds * temperature_time_adjustment
-                    apex.thermal_time_since_emergence += self.time_step_in_seconds * temperature_time_adjustment
-                    apex.actual_time_since_cells_formation += self.time_step_in_seconds
-                    apex.thermal_time_since_cells_formation += self.time_step_in_seconds * temperature_time_adjustment
-                    # The new element returned by the function corresponds to this apex:
-                    new_apex.append(apex)
-                    # And the function returns this new apex and stops here:
-                    return new_apex
-
-            # OTHERWISE, THE APEX MUST BE DEAD:
+            potential_radius = (apex.radius - self.Dmin / 2) * self.RMD + self.Dmin / 2.
+            apex_angle_roll = 120
+            if apex.root_order == 1:
+                primordium_angle_down = 45
             else:
-                # IF THE APEX HAS ALREADY DIED AT A PREVIOUS TIME STEP:
-                if apex.type == "Dead" or apex.type == "Just_dead":
-                    # The type is (re)declared "Dead":
-                    apex.type = "Dead"
-                    # And the times are simply incremented:
-                    apex.actual_time_since_primordium_formation += self.time_step_in_seconds
-                    apex.actual_time_since_emergence += self.time_step_in_seconds
-                    apex.actual_time_since_cells_formation += self.time_step_in_seconds
-                    apex.actual_time_since_growth_stopped += self.time_step_in_seconds
-                    apex.actual_time_since_death += self.time_step_in_seconds
-                    apex.thermal_time_since_primordium_formation += self.time_step_in_seconds * temperature_time_adjustment
-                    apex.thermal_time_since_emergence += self.time_step_in_seconds * temperature_time_adjustment
-                    apex.thermal_time_since_cells_formation += self.time_step_in_seconds * temperature_time_adjustment
-                    apex.thermal_time_since_growth_stopped += self.time_step_in_seconds * temperature_time_adjustment
-                    apex.thermal_time_since_death += self.time_step_in_seconds * temperature_time_adjustment
-                    # The new element returned by the function corresponds to this apex:
-                    new_apex.append(apex)
-                    # And the function returns this new apex and stops here:
-                    return new_apex
-                # OTHERWISE, THE APEX HAS TO DIE DURING THIS TIME STEP:
-                else:
-                    # Then the apex is declared "Just dead":
-                    apex.type = "Just_dead"
-                    # The exact time since the apex died is calculated:
-                    apex.thermal_time_since_death = apex.thermal_time_since_growth_stopped + self.time_step_in_seconds * temperature_time_adjustment - apex.life_duration
-                    apex.actual_time_since_death = apex.thermal_time_since_death / temperature_time_adjustment
-                    # And the other times are incremented:
-                    apex.actual_time_since_primordium_formation += self.time_step_in_seconds
-                    apex.actual_time_since_emergence += self.time_step_in_seconds
-                    apex.actual_time_since_cells_formation += self.time_step_in_seconds
-                    apex.actual_time_since_growth_stopped += self.time_step_in_seconds
-                    apex.thermal_time_since_primordium_formation += self.time_step_in_seconds * temperature_time_adjustment
-                    apex.thermal_time_since_emergence += self.time_step_in_seconds * temperature_time_adjustment
-                    apex.thermal_time_since_cells_formation += self.time_step_in_seconds * temperature_time_adjustment
-                    apex.thermal_time_since_growth_stopped += self.time_step_in_seconds * temperature_time_adjustment
-                    # The new element returned by the function corresponds to this apex:
-                    new_apex.append(apex)
-                    # And the function returns this new apex and stops here:
-                    return new_apex
+                primordium_angle_down = 70
+            primordium_angle_roll = 5
+
+        # We add a condition, i.e. potential_radius should not be larger than the one from the mother root:
+        if potential_radius > apex.radius:
+            potential_radius = apex.radius
+
+        # If the distance between the apex and the last emerged root is higher than the inter-primordia distance
+        # AND if the potential radius is higher than the minimum diameter:
+        if apex.dist_to_ramif > self.IPD and potential_radius >= self.Dmin and potential_radius <= apex.radius:
+            # The distance that the tip of the apex has covered since the actual primordium formation is calculated:
+            elongation_since_last_ramif = apex.dist_to_ramif - self.IPD
+            # TODO: Is the third condition really relevant?
+
+            # A specific rolling angle is attributed to the parent apex:
+            apex.angle_roll = apex_angle_roll
+
+            # We verify that the apex has actually elongated:
+            if apex.actual_elongation > 0 and elongation_rate > 0.:
+                # Then the actual time since the primordium must have been formed is precisely calculated
+                # according to the actual growth of the parent apex since primordium formation,
+                # taking into account the actual growth rate of the parent defined as
+                # apex.actual_elongation / time_step_in_seconds
+                actual_time_since_formation = elongation_since_last_ramif / elongation_rate
+            else:
+                actual_time_since_formation = 0.
+
+            # And we add the primordium of a possible new lateral root:
+            ramif = self.ADDING_A_CHILD(mother_element=apex, edge_type='+', label='Apex',
+                                        type='Normal_root_before_emergence',
+                                        root_order=apex.root_order + 1,
+                                        angle_down=primordium_angle_down,
+                                        angle_roll=primordium_angle_roll,
+                                        length=0.,
+                                        radius=potential_radius,
+                                        identical_properties=False,
+                                        nil_properties=True)
+            if apex.nitrate_transporters_affinity_factor:
+                lateral_elongation_possibility = max(apex.nitrate_transporters_affinity_factor * self.main_roots_growth_extender, 1)
+            else:
+                lateral_elongation_possibility = 1
+            # We specifically recomputes the growth duration:
+            ramif.growth_duration = self.GDs * (2. * ramif.radius) ** 2 * lateral_elongation_possibility
+            # ramif.growth_duration = self.calculate_growth_duration(radius=ramif.radius, index=ramif.index(),
+            #                                                        root_order=ramif.root_order)
+            # We specify the exact time since formation:
+            ramif.actual_time_since_primordium_formation = actual_time_since_formation
+            ramif.thermal_time_since_primordium_formation = actual_time_since_formation * temperature_time_adjustment
+            # And the new distance between the parent apex and the last ramification is redefined,
+            # by taking into account the actual elongation of apex since the child formation:
+            apex.dist_to_ramif = elongation_since_last_ramif
+            # # We also put in memory the index of the child:
+            # apex.lateral_primordium_index = ramif.index()
+            # We add the apex and its ramif in the list of apices returned by the function:
+            new_apex.append(apex)
+            new_apex.append(ramif)
+
+        return new_apex
+
 
     # Function calculating the potential development of a root segment:
     def potential_segment_development(self, segment):

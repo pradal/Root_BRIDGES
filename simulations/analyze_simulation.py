@@ -8,7 +8,7 @@ if __name__ == '__main__':
     #scenario_name = "Reference_Fischer"
     #scenario_name = "Drew_1975_1"
     scenario_name = "Drew_1975_low"
-    scenarios = ["Drew_1975_1", "Drew_1975_low"]
+    scenarios = ["Drew_1975_1"]
 
     analyze_data(scenarios=scenarios, outputs_dirpath=os.path.join("outputs", scenario_name),
                      on_sums=False,
