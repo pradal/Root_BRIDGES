@@ -4,13 +4,12 @@ from analyze.analyze import analyze_data
 
 
 if __name__ == '__main__':
+    scenarios = ["Drew_1975_1", "Drew_1975_low"]
 
-    #scenario_name = "Reference_Fischer"
-    #scenario_name = "Drew_1975_1"
-    scenario_name = "Drew_1975_low"
-    scenarios = ["Drew_1975_1"]
+    output_path = "outputs"
+    output_path = "C:/Users/tigerault/OneDrive - agroparistech.fr/Thesis/Sujet/Modelling/saved_scenarios/30-05"
 
-    analyze_data(scenarios=scenarios, outputs_dirpath=os.path.join("outputs", scenario_name),
+    analyze_data(scenarios=scenarios, outputs_dirpath=output_path,
                      on_sums=False,
                      on_performance=False,
                      animate_raw_logs=True,

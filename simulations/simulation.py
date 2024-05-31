@@ -54,7 +54,8 @@ def simulate_scenarios(scenarios, simulation_length=2500, echo=True, log_setting
 
 if __name__ == '__main__':
     #scenarios = ms.from_table(file_path="inputs/Scenarios_24_05.xlsx", which=["Reference_Fischer"])
-    scenarios = ms.from_table(file_path="inputs/Scenarios_24_05.xlsx", which=["Drew_1975_1", "Drew_1975_low", "Drew_1975_high"])
+    #scenarios = ms.from_table(file_path="inputs/Scenarios_24_05.xlsx", which=["Drew_1975_1", "Drew_1975_low", "Drew_1975_high"])
+    scenarios = ms.from_table(file_path="inputs/Scenarios_24_05.xlsx", which=["Drew_1975_1", "Drew_1975_low"])
     #scenarios = ms.from_table(file_path="inputs/Scenarios_24_05.xlsx", which=["Drew_1975_high"])
     #scenarios = ms.from_table(file_path="inputs/Scenarios_24_05.xlsx", which=["Drew_1975_1"])
     # , "Drew_1975_1", "Drew_1975_low", "Drew_1975_high"
