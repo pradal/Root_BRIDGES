@@ -1106,7 +1106,7 @@ class RootGrowthModelCoupled(RootGrowthModel):
                 # corrected by temperature and modulated by the concentration of hexose (in the same way as for root
                 # elongation) available in the root hair zone on the root element:
                 cn_limitation = ((n.C_hexose_root / (n.C_hexose_root + self.Km_elongation)) + (n.AA / (n.AA + self.Km_elongation_amino_acids))) / 2
-                new_length = n.root_hair_length + self.root_hairs_elongation_rate * self.root_hair_radius * (n.actual_length_with_hairs / n.length) * cn_limitation
+                new_length = n.root_hair_length + self.root_hairs_elongation_rate * self.root_hair_radius * (n.actual_length_with_hairs / n.length) * cn_limitation * elapsed_thermal_time
                 
                 # If the new calculated length is higher than the maximal length:
                 if new_length > self.root_hair_max_length:
