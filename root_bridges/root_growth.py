@@ -4,9 +4,12 @@ from dataclasses import dataclass
 from metafspm.component_factory import *
 from metafspm.component import declare
 
+from openalea.mtg import *
 from openalea.mtg.traversal import post_order
 from numpy import pi, sqrt
 import numpy as np
+import pandas as pd
+import os
 
 
 family = "growth"
@@ -54,6 +57,7 @@ class RootGrowthModelCoupled(RootGrowthModel):
     def __init__(self, g=None ,time_step=3600, **scenario):
         """Pass to inherited init, necessary with data classes"""
         super().__init__(g, time_step, **scenario)
+
 
     def post_growth_updating(self):
         self.vertices = self.g.vertices(scale=self.g.max_scale())
