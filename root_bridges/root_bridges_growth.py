@@ -1,15 +1,4 @@
-import root_bridges
-
-import numpy as np
-
-# Edited models
-from root_bridges.root_CN import RootCNUnified
 from root_bridges.root_growth import RootGrowthModelCoupled
-from root_bridges.soil_model import SoilModel
-
-# Untouched models
-from rhizodep.root_anatomy import RootAnatomy
-from root_cynaps.root_water import RootWaterModel
 
 # Utilities
 from metafspm.composite_wrapper import CompositeModel
@@ -47,45 +36,22 @@ class Model(CompositeModel):
         self.input_tables = scenario["input_tables"]
 
         # INIT INDIVIDUAL MODULES
-        self.root_growth = RootGrowthModelCoupled(scenario["input_mtg"], time_step, **parameters)
+        if len(scenario["input_mtg"]) > 0:
+            self.root_growth = RootGrowthModelCoupled(scenario["input_mtg"]["root_mtg_file"], time_step, **parameters)
+        else:
+            self.root_growth = RootGrowthModelCoupled(time_step, **parameters)
         self.g = self.root_growth.g
-        self.root_anatomy = RootAnatomy(self.g, time_step, **parameters)
-        self.root_water = RootWaterModel(self.g, time_step/10, **parameters)
-        self.root_cn = RootCNUnified(self.g, time_step, **parameters)
-        self.soil = SoilModel(self.g, time_step, **parameters)
-        self.soil_voxels = self.soil.voxels
 
         # EXPECTED !
-        self.models = (self.root_growth, self.root_anatomy, self.root_water, self.root_cn, self.soil)
-        self.data_structures = {"root": self.g, "soil": self.soil_voxels}
-
-        # LINKING MODULES
-        self.link_around_mtg(translator_path=root_bridges.__path__[0])
-
-        self.root_water.post_coupling_init()
+        self.models = (self.root_growth,)
+        self.data_structures = {"root": self.g}
 
 
     def run(self):
         self.apply_input_tables(tables=self.input_tables, to=self.models, when=self.time)
 
-        # Update environment boundary conditions
-        self.soil()
-
         # Compute root growth from resulting states
         self.root_growth()
-
-        # Extend property dictionaries after growth
-        self.root_anatomy.post_growth_updating()
-        self.root_water.post_growth_updating()
-        self.root_cn.post_growth_updating()
-        self.soil.post_growth_updating()
-        
-        # Update topological surfaces and volumes based on other evolved structural properties
-        self.root_anatomy()
-
-        # Compute state variations for water and then carbon and nitrogen
-        self.root_water()
-        self.root_cn()
 
         self.time += 1
 
