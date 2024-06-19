@@ -1,8 +1,5 @@
 # use : mamba create -y -n root_bridges -c conda-forge -c openalea3 --strict-channel-priority --file requirements.txt
-# then clone https://github.com/openalea-incubator/caribu.git
-# cd to folder and run "scons" to build it
-# then run python -m setup.py install
-# finally proceed to other installations
+
 python
 # OpenAlea dependancies
 # openalea.plantgl dependancy of openalea.mtg
@@ -19,13 +16,15 @@ pandas
 numpy
 scipy
 matplotlib
-#scikit-learn
-#umap-learn
-#hdbscan
+scikit-learn
+umap-learn
+hdbscan
 imageio
 imageio-ffmpeg
 pyvista
 openpyxl
-#cudatoolkit
-#tensorflow
+cudatoolkit
+tensorflow
 statsmodels
+guhdi
+SALib
