@@ -52,7 +52,7 @@ def simulate_scenarios(scenarios, simulation_length=2500, echo=True, log_setting
 
         print(f"[INFO] Launching scenario {scenario_name}...")
         p = mp.Process(target=single_run, kwargs=dict(scenario=scenario, 
-                                                      outputs_dirpath=os.path.join("test/outputs", str(scenario_name)),
+                                                      outputs_dirpath=os.path.join("outputs", str(scenario_name)),
                                                       simulation_length=simulation_length,
                                                       echo=echo,
                                                       log_settings=log_settings))
@@ -61,6 +61,6 @@ def simulate_scenarios(scenarios, simulation_length=2500, echo=True, log_setting
 
 
 if __name__ == '__main__':
-    scenarios = ms.from_table(file_path="test/inputs/Scenarios_24_06.xlsx", which=["Benchmark_All"])
+    scenarios = ms.from_table(file_path="inputs/Scenarios_24_06.xlsx", which=["Benchmark_All"])
     simulate_scenarios(scenarios, simulation_length=1, log_settings=Logger.light_log)
     
