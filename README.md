@@ -16,7 +16,7 @@ Then, clone this repository and its unpackages dependancies in the desired locat
 git clone --recurse-submodules https://github.com/GeraultTr/Root_BRIDGES.git
 git clone https://github.com/GeraultTr/metafspm.git
 git clone --recurse-submodules https://github.com/GeraultTr/data_utility.git
-cd root_bridges
+cd Root_BRIDGES
 ```
 
 Then, install packaged dependancies with : 
