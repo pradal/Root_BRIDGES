@@ -1,1 +1,1 @@
-from root_bridges import Model
+from root_bridges.root_bridges import Model

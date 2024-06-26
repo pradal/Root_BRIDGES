@@ -11,7 +11,7 @@ from initialize.initialize import MakeScenarios as ms
 
 
 def single_run(scenario, outputs_dirpath="outputs", simulation_length=2500, echo=True, log_settings={}):
-    root_bridges_water = Model(time_step=3600, **scenario)
+    root_bridges_water = Model(time_step=3600, scenario=scenario)
 
     logger = Logger(model_instance=root_bridges_water, outputs_dirpath=outputs_dirpath, 
                     time_step_in_hours=1, logging_period_in_hours=24,

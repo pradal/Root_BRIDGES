@@ -28,3 +28,4 @@ tensorflow
 statsmodels
 guhdi
 SALib
+trimesh
