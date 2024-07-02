@@ -7,11 +7,11 @@ from root_bridges.root_bridges_metabo import Model
 # Utility packages
 from log.logging import Logger
 from analyze.analyze import analyze_data
-from initialize.initialize import MakeScenarios as ms
+from initialize import MakeScenarios as ms
 
 
 def single_run(scenario, outputs_dirpath="outputs", simulation_length=2500, echo=True, log_settings={}):
-    root_bridges_metabo = Model(time_step=3600, scenario=scenario)
+    root_bridges_metabo = Model(3600, **scenario)
 
     logger = Logger(model_instance=root_bridges_metabo, outputs_dirpath=outputs_dirpath, 
                     time_step_in_hours=1, logging_period_in_hours=24,
@@ -62,5 +62,10 @@ def simulate_scenarios(scenarios, simulation_length=2500, echo=True, log_setting
 
 if __name__ == '__main__':
     scenarios = ms.from_table(file_path="inputs/Scenarios_24_06.xlsx", which=["Benchmark_All_Metabo"])
-    simulate_scenarios(scenarios, simulation_length=1, log_settings=Logger.light_log)
-    
+    #simulate_scenarios(scenarios, simulation_length=1, log_settings=Logger.light_log)
+    for scenario_name in scenarios:
+        scenario = scenarios[scenario_name]
+        single_run(
+            scenario=scenario, 
+            outputs_dirpath=os.path.join("outputs", str(scenario_name)),
+            )

@@ -1,5 +1,5 @@
 from root_bridges.root_bridges import Model
-from initialize.initialize import MakeScenarios as ms
+from initialize import MakeScenarios as ms
 
 def test_init():
     scenarios = ms.from_table(file_path="inputs/Scenarios_24_06.xlsx", which=["Reference_Fischer"])
