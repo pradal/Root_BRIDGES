@@ -38,6 +38,9 @@ def single_run(scenario, outputs_dirpath="outputs", simulation_length=2500, echo
         global_performance.to_excel(os.path.join(outputs_dirpath, "global_performance.xlsx"))
         #analyze_data(scenarios=[os.path.basename(outputs_dirpath)], outputs_dirpath=outputs_dirpath, target_properties=None, **log_settings)
 
+def model_run(scenario):
+    model = Model(3600, **scenario)
+    model.run()
 
 def simulate_scenarios(scenarios, simulation_length=2500, echo=True, log_settings={}):
     processes = []
@@ -62,5 +65,10 @@ def simulate_scenarios(scenarios, simulation_length=2500, echo=True, log_setting
 
 if __name__ == '__main__':
     scenarios = ms.from_table(file_path="inputs/Scenarios_24_06.xlsx", which=["Benchmark_All_Water"])
-    simulate_scenarios(scenarios, simulation_length=1, log_settings=Logger.light_log)
+    #simulate_scenarios(scenarios, simulation_length=1, log_settings=Logger.light_log)
+    for scenario_name in scenarios:
+        scenario = scenarios[scenario_name]
+        model_run(
+            scenario=scenario, 
+            )
     

@@ -38,6 +38,9 @@ def single_run(scenario, outputs_dirpath="outputs", simulation_length=2500, echo
         global_performance.to_excel(os.path.join(outputs_dirpath, "global_performance.xlsx"))
         #analyze_data(scenarios=[os.path.basename(outputs_dirpath)], outputs_dirpath=outputs_dirpath, target_properties=None, **log_settings)
 
+def model_run(scenario):
+    root_bridges_metabo = Model(3600, **scenario)
+    root_bridges_metabo.run()
 
 def simulate_scenarios(scenarios, simulation_length=2500, echo=True, log_settings={}):
     processes = []
@@ -65,8 +68,6 @@ if __name__ == '__main__':
     #simulate_scenarios(scenarios, simulation_length=1, log_settings=Logger.light_log)
     for scenario_name in scenarios:
         scenario = scenarios[scenario_name]
-        single_run(
+        model_run(
             scenario=scenario, 
-            outputs_dirpath=os.path.join("outputs", str(scenario_name)),
-            simulation_length=1,
             )
