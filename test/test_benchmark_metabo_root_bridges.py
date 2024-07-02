@@ -68,4 +68,5 @@ if __name__ == '__main__':
         single_run(
             scenario=scenario, 
             outputs_dirpath=os.path.join("outputs", str(scenario_name)),
+            simulation_length=1,
             )
